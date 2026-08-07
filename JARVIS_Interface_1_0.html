@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JARVIS">
+<title>JARVIS // iPad</title>
+<style>
+:root{--c:#29f3ff;--dim:#57aeb5;--bg:#02080c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#a9fbff;font-family:-apple-system,BlinkMacSystemFont,"SFMono-Regular",Consolas,monospace}
+body{background:radial-gradient(circle at 50% 45%,#063844 0,#02141b 20%,#02080c 55%,#010507 100%)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.32;background:linear-gradient(rgba(41,243,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(41,243,255,.055) 1px,transparent 1px);background-size:42px 42px}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(41,243,255,.025) 4px);mix-blend-mode:screen}
+.app{height:100%;padding:14px;display:grid;grid-template-columns:240px 1fr 250px;grid-template-rows:76px 1fr 108px;gap:10px}
+.panel{border:1px solid rgba(41,243,255,.42);background:rgba(1,18,25,.72);box-shadow:0 0 25px rgba(0,220,255,.08),inset 0 0 25px rgba(0,220,255,.04);position:relative;overflow:hidden;border-radius:4px}
+.header{grid-column:1/4;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:24px;letter-spacing:6px;text-shadow:0 0 15px var(--c)}
+.sub{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:4px}
+.online{font-size:10px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#64ffdc;box-shadow:0 0 12px #64ffdc;margin-right:6px}
+.left,.right{padding:13px}
+.center{display:flex;align-items:center;justify-content:center}
+.section{font-size:10px;letter-spacing:2px;border-bottom:1px solid rgba(41,243,255,.25);padding-bottom:7px;margin-bottom:10px;color:#c5ffff}
+.metric{display:flex;justify-content:space-between;font-size:10px;margin:9px 0}.bar{height:3px;background:#08242a}.bar i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c)}
+.clock{text-align:center;font-size:28px;text-shadow:0 0 15px var(--c);margin:12px 0 2px}.date{text-align:center;font-size:9px;color:var(--dim)}
+.weather{text-align:center;font-size:25px;margin:14px 0 4px}.weather small{display:block;font-size:9px;color:var(--dim)}
+.event{font-size:9px;border-left:2px solid var(--c);padding:7px 8px;margin:7px 0;background:rgba(41,243,255,.04)}
+.arc{width:min(50vw,430px);height:min(50vw,430px);position:relative;border-radius:50%;display:grid;place-items:center}
+.arc:before,.arc:after{content:"";position:absolute;border-radius:50%;inset:2%;border:1px solid var(--c);box-shadow:0 0 25px rgba(41,243,255,.3)}
+.arc:after{inset:10%;border:2px dashed rgba(41,243,255,.45);animation:spin 16s linear infinite}
+.r{position:absolute;border-radius:50%;border:1px solid rgba(41,243,255,.45)}.r1{inset:18%;border-style:dotted;animation:spin 24s linear infinite}.r2{inset:25%;border-top:3px solid var(--c);border-bottom:3px solid transparent;animation:spin 10s linear reverse infinite}
+.core{width:35%;height:35%;border-radius:50%;display:grid;place-items:center;border:2px solid var(--c);background:radial-gradient(circle,#0c8996 0,#06323c 25%,#020b10 68%);box-shadow:0 0 35px #00eaff,inset 0 0 28px rgba(41,243,255,.55)}
+.core span{font-size:30px;letter-spacing:3px;text-shadow:0 0 20px white;color:#dfffff}
+.scan{position:absolute;width:100%;height:1px;background:var(--c);box-shadow:0 0 15px var(--c);animation:scan 4s linear infinite;opacity:.7}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes scan{0%{top:10%;opacity:0}15%{opacity:.8}85%{opacity:.8}100%{top:90%;opacity:0}}
+.footer{grid-column:2/4;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.log{font-size:9px;color:#55aeb5;line-height:1.5;height:45px;overflow:hidden}
+.command{grid-column:1/3;display:flex;gap:6px;border:1px solid rgba(41,243,255,.3);padding:7px}
+input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:#dfffff;font:11px monospace}
+button{border:1px solid rgba(41,243,255,.45);background:rgba(41,243,255,.06);color:#8fffff;padding:7px 10px;font:9px monospace;border-radius:2px}
+button:active{background:rgba(41,243,255,.2)}
+.mic{font-size:18px;padding:4px 12px}
+.hint{font-size:8px;color:#4f969d;margin-top:8px;line-height:1.5}
+@media(max-width:800px){
+ .app{grid-template-columns:1fr 1fr;grid-template-rows:60px 1fr 112px;padding:8px;gap:7px}
+ .header{grid-column:1/3}.left{display:none}.right{grid-column:1/3;position:absolute;right:8px;top:76px;width:180px;background:rgba(1,18,25,.9);z-index:3;transform:scale(.88);transform-origin:top right}
+ .center{grid-column:1/3;grid-row:2}.footer{grid-column:1/3;grid-row:3}.arc{width:min(78vw,390px);height:min(78vw,390px)}.logo{font-size:19px}
+}
+@media(max-height:600px){.app{grid-template-rows:55px 1fr 95px}.arc{width:min(62vh,330px);height:min(62vh,330px)}.right{top:67px}.footer{padding:7px}.section{margin-bottom:5px}.clock{font-size:23px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="panel header">
+  <div><div class="logo">J.A.R.V.I.S.</div><div class="sub">PERSONAL ARTIFICIAL INTELLIGENCE // iPAD INTERFACE</div></div>
+  <div class="online"><span class="dot"></span>ONLINE</div>
+</header>
+
+<aside class="panel left">
+  <div class="section">SYSTEM</div>
+  <div class="metric"><span>CPU</span><b id="cpu">--</b></div><div class="bar"><i id="cb"></i></div>
+  <div class="metric"><span>MEMORY</span><b id="mem">--</b></div><div class="bar"><i id="mb"></i></div>
+  <div class="metric"><span>SESSION</span><b id="up">00:00</b></div>
+  <div class="section" style="margin-top:22px">VOICE</div>
+  <button style="width:100%" onclick="listen()">🎙 JARVIS AKTIVIEREN</button>
+  <div class="hint">Sprich z. B. „Wie spät ist es?“ oder „Wie ist das Wetter?“</div>
+</aside>
+
+<main class="panel center">
+  <div class="scan"></div>
+  <div class="arc"><div class="r r1"></div><div class="r r2"></div><div class="core"><span id="core">J</span></div></div>
+</main>
+
+<aside class="panel right">
+  <div class="section">LOCAL DATA</div>
+  <div class="clock" id="clock">--:--</div><div class="date" id="date">--</div>
+  <div class="weather">☁️ <span id="temp">--°</span><small id="wt">Wetter wird geladen …</small></div>
+  <div class="section" style="margin-top:16px">TERMINE</div>
+  <div class="event">08:00 · Schule</div>
+  <div class="event">15:30 · Freizeit</div>
+  <div class="event">18:00 · Termin</div>
+  <div class="hint">Demo-Termine – später durch deinen Kalender ersetzbar.</div>
+</aside>
+
+<section class="panel footer">
+  <div><div class="section">AI CORE</div><div class="log" id="log">[SYSTEM] JARVIS iPad interface ready.<br>[VOICE] Standby.<br>[AI] Awaiting command…</div></div>
+  <div><div class="section">QUICK COMMANDS</div><button onclick="cmd('Wie spät ist es?')">ZEIT</button> <button onclick="cmd('Wie ist das Wetter?')">WETTER</button> <button onclick="cmd('Hallo Jarvis')">JARVIS</button></div>
+  <div class="command"><span>›</span><input id="input" placeholder="Befehl an JARVIS …" onkeydown="if(event.key==='Enter')run()"><button onclick="run()">SEND</button><button class="mic" onclick="listen()">🎙</button></div>
+</section>
+</div>
+
+<script>
+const started=Date.now();
+function tick(){
+ const d=new Date();
+ clock.textContent=d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ date.textContent=d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long'});
+ const s=Math.floor((Date.now()-started)/1000);up.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+ const c=20+Math.floor(Math.random()*35),m=44+Math.floor(Math.random()*22);cpu.textContent=c+' %';mem.textContent=m+' %';cb.style.width=c+'%';mb.style.width=m+'%';
+} setInterval(tick,1000);tick();
+
+async function weather(){
+ try{
+  const p=await fetch('https://ipapi.co/json/').then(x=>x.json());
+  const w=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.latitude}&longitude=${p.longitude}&current=temperature_2m,weather_code&timezone=auto`).then(x=>x.json());
+  temp.textContent=Math.round(w.current.temperature_2m)+'°C';
+  const names={0:'Klar',1:'Überwiegend klar',2:'Teilweise bewölkt',3:'Bedeckt',45:'Nebel',48:'Nebel',51:'Nieselregen',61:'Regen',63:'Regen',65:'Starker Regen',71:'Schnee',80:'Regenschauer',95:'Gewitter'};
+  wt.textContent=names[w.current.weather_code]||'Aktuelle Bedingungen';
+ }catch(e){wt.textContent='Wetter momentan nicht verfügbar'}
+} weather();
+
+function add(t){log.innerHTML+='[JARVIS] '+t+'<br>';log.scrollTop=9999}
+function speak(t){add(t);if('speechSynthesis' in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=.9;u.pitch=.75;speechSynthesis.speak(u)}}
+function cmd(t){input.value=t;run()}
+function run(){
+ const q=input.value.trim();if(!q)return;add('USER: '+q);input.value='';const x=q.toLowerCase();
+ if(x.includes('wetter')) speak('Aktuell sind es '+temp.textContent+'. '+wt.textContent+'.');
+ else if(x.includes('zeit')||x.includes('uhr')) speak('Es ist '+clock.textContent+'.');
+ else if(x.includes('hallo')||x.includes('jarvis')) speak('Hallo. Ich bin bereit. Wie kann ich dir helfen?');
+ else if(x.includes('musik')) speak('Das Musikmodul ist bereit. Auf dem iPad kann ich später passende Web- oder Kurzbefehle ansteuern.');
+ else speak('Befehl empfangen. Das echte KI-Gehirn wird in der nächsten Ausbaustufe verbunden.');
+}
+function listen(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){speak('Die Spracherkennung ist in diesem Browser nicht verfügbar. Bitte erlaube Mikrofonzugriff oder nutze Safari mit aktivierter Diktierfunktion.');return}
+ const r=new SR();r.lang='de-DE';r.interimResults=false;r.maxAlternatives=1;core.textContent='…';
+ r.onresult=e=>{input.value=e.results[0][0].transcript;core.textContent='J';run()};
+ r.onerror=()=>{core.textContent='J';speak('Ich konnte dich nicht verstehen.')};r.onend=()=>core.textContent='J';r.start();
+}
+</script>
+</body></html>
