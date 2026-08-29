@@ -1,0 +1,105 @@
+{
+  "name": "Jarvis - iPad Training & School Organizer",
+  "short_name": "Jarvis",
+  "description": "All-in-One App für Fußball-Training, Schulorganisation und Goodnotes-Integration auf dem iPad",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "categories": ["productivity", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Training",
+      "short_name": "Training",
+      "description": "Schneller Zugriff auf deinen Trainingsplan",
+      "url": "/?view=training",
+      "icons": [
+        {
+          "src": "/icons/training-96.png",
+          "sizes": "96x96",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    },
+    {
+      "name": "Aufgaben",
+      "short_name": "Aufgaben",
+      "description": "Deine Schulaufgaben und To-Do Liste",
+      "url": "/?view=school",
+      "icons": [
+        {
+          "src": "/icons/school-96.png",
+          "sizes": "96x96",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    },
+    {
+      "name": "Notizen",
+      "short_name": "Notizen",
+      "description": "Deine Goodnotes Notizen und Studiennoten",
+      "url": "/?view=notes",
+      "icons": [
+        {
+          "src": "/icons/notes-96.png",
+          "sizes": "96x96",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home-540.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home Screen"
+    },
+    {
+      "src": "/screenshots/training-540.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Training Module"
+    },
+    {
+      "src": "/screenshots/home-1280.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Home Screen iPad"
+    }
+  ]
+}
