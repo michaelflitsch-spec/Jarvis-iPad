@@ -112,14 +112,29 @@ async function weather(){
 } weather();
 
 function add(t){log.innerHTML+='[JARVIS] '+t+'<br>';log.scrollTop=9999}
-function speak(t){add(t);if('speechSynthesis' in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='de-DE';u.rate=.9;u.pitch=.75;speechSynthesis.speak(u)}}
+async function speak(t){
+ add(t);
+ try{
+  const r=await fetch('http://localhost:3000/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
+  const audio=new Audio(URL.createObjectURL(await r.blob()));
+  audio.play();
+ }catch(e){
+  if('speechSynthesis' in window){
+   speechSynthesis.cancel();
+   let u=new SpeechSynthesisUtterance(t);
+   u.lang='de-DE';
+   u.rate=.9;
+   speechSynthesis.speak(u);
+  }
+ }
+}
 function cmd(t){input.value=t;run()}
 function run(){
  const q=input.value.trim();if(!q)return;add('USER: '+q);input.value='';const x=q.toLowerCase();
  if(x.includes('wetter')) speak('Aktuell sind es '+temp.textContent+'. '+wt.textContent+'.');
  else if(x.includes('zeit')||x.includes('uhr')) speak('Es ist '+clock.textContent+'.');
- else if(x.includes('hallo')||x.includes('jarvis')) speak('Hallo. Ich bin bereit. Wie kann ich dir helfen?');
- else if(x.includes('musik')) speak('Das Musikmodul ist bereit. Auf dem iPad kann ich später passende Web- oder Kurzbefehle ansteuern.');
+ else if(x.includes('hallo')||x.includes('jarvis')) speak('Guten Tag. Ich bin bereit. Wie kann ich Ihnen helfen?');
+ else if(x.includes('musik')) speak('Das Musikmodul ist bereit. Auf dem iPad kann ich später passende Musikbefehle für Sie ansteuern.');
  else speak('Befehl empfangen. Das echte KI-Gehirn wird in der nächsten Ausbaustufe verbunden.');
 }
 function listen(){
