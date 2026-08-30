@@ -1,0 +1,7 @@
+server/.env
+server/data/
+server/node_modules/
+node_modules/
+assets/boot-intro.*
+.DS_Store
+*.swp
