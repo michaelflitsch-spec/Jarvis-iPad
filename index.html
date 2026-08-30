@@ -119,12 +119,16 @@ function speak(t){
  add(t);
  if('speechSynthesis' in window){
   speechSynthesis.cancel();
-  let u=new SpeechSynthesisUtterance(t);
+  const u=new SpeechSynthesisUtterance(t);
   u.lang='de-DE';
-  u.rate=0.9;
-  u.pitch=0.8;
+  u.rate=0.85;
+  u.pitch=0.9;
   u.volume=1;
-  speechSynthesis.speak(u);
+  u.onend=()=>console.log('Sprache fertig');
+  u.onerror=()=>console.log('Sprache Fehler');
+  setTimeout(()=>speechSynthesis.speak(u), 100);
+ }else{
+  console.log('speechSynthesis nicht verfügbar');
  }
 }
 function cmd(t){input.value=t;run()}
@@ -138,10 +142,27 @@ function run(){
 }
 function listen(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){speak('Die Spracherkennung ist in diesem Browser nicht verfügbar. Bitte erlaube Mikrofonzugriff oder nutze Safari mit aktivierter Diktierfunktion.');return}
- const r=new SR();r.lang='de-DE';r.interimResults=false;r.maxAlternatives=1;core.textContent='…';
- r.onresult=e=>{input.value=e.results[0][0].transcript;core.textContent='J';run()};
- r.onerror=()=>{core.textContent='J';speak('Ich konnte dich nicht verstehen.')};r.onend=()=>core.textContent='J';r.start();
+ if(!SR){add('ERROR: Spracherkennung nicht verfügbar');return}
+ const r=new SR();
+ r.lang='de-DE';
+ r.interimResults=false;
+ r.maxAlternatives=1;
+ r.continuous=false;
+ core.textContent='🎙';
+ r.onstart=()=>{add('LISTENING...');};
+ r.onresult=e=>{
+  const txt=e.results[0][0].transcript;
+  input.value=txt;
+  core.textContent='J';
+  console.log('Erkannt:',txt);
+  run();
+ };
+ r.onerror=e=>{
+  core.textContent='J';
+  add('ERROR: '+e.error);
+ };
+ r.onend=()=>{core.textContent='J';};
+ r.start();
 }
 </script>
 </body></html>
