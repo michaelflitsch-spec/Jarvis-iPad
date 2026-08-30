@@ -13,6 +13,10 @@ export function googleConnected() {
   return Boolean(store.get("google")?.refresh_token);
 }
 
+export function googleDisconnect() {
+  store.set("google", null);
+}
+
 export function googleAuthUrl(state = "") {
   const q = new URLSearchParams({
     client_id: config.google.clientId,
@@ -21,7 +25,8 @@ export function googleAuthUrl(state = "") {
     scope: config.google.scopes.join(" "),
     access_type: "offline",
     include_granted_scopes: "true",
-    prompt: "consent",
+    // select_account erzwingt die Kontoauswahl, consent den Refresh-Token.
+    prompt: "select_account consent",
     state,
   });
   return `${AUTH}?${q}`;

@@ -11,12 +11,20 @@ const API = "https://api.spotify.com/v1";
 export const spotifyConfigured = () => Boolean(config.spotify.clientId && config.spotify.clientSecret);
 export const spotifyConnected = () => Boolean(store.get("spotify")?.refresh_token);
 
+export function spotifyDisconnect() {
+  store.set("spotify", null);
+}
+
 export function spotifyAuthUrl(state = "") {
   const q = new URLSearchParams({
     client_id: config.spotify.clientId,
     response_type: "code",
     redirect_uri: `${config.publicUrl}/auth/spotify/callback`,
     scope: config.spotify.scopes.join(" "),
+    // Ohne show_dialog bestaetigt Spotify stillschweigend mit dem Konto, das
+    // im Browser gerade eingeloggt ist. Mit dem Dialog kommt man an den Link
+    // "Als anderer Nutzer anmelden" - sonst ist kein Kontowechsel moeglich.
+    show_dialog: "true",
     state,
   });
   return `${AUTH}?${q}`;

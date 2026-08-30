@@ -4,11 +4,11 @@ import express from "express";
 import { config, featureStatus } from "./config.js";
 import { store } from "./store.js";
 import {
-  googleAuthUrl, googleExchangeCode, googleConfigured, googleConnected,
+  googleAuthUrl, googleExchangeCode, googleConfigured, googleConnected, googleDisconnect,
   gmailList, gmailGet, calendarList, calendarCreate,
 } from "./lib/google.js";
 import {
-  spotifyAuthUrl, spotifyExchangeCode, spotifyConfigured, spotifyConnected,
+  spotifyAuthUrl, spotifyExchangeCode, spotifyConfigured, spotifyConnected, spotifyDisconnect,
   play as spotifyPlay, pause as spotifyPause, setVolume, devices, searchTrack,
 } from "./lib/spotify.js";
 import { notionConfigured, notionCreatePlanPage } from "./lib/notion.js";
@@ -61,8 +61,8 @@ a{color:#29f3ff}h1{letter-spacing:6px}code{color:#8fffff}li{margin:4px 0}</style
 <h1>J.A.R.V.I.S.</h1><p>Backend laeuft.</p>
 <h3>Systeme</h3><ul>
 <li>Claude: ${f.claude ? "konfiguriert" : "<b>ANTHROPIC_API_KEY fehlt</b>"}</li>
-<li>Google: ${googleConnected() ? "verbunden" : googleConfigured() ? '<a href="/auth/google">jetzt verbinden</a>' : "<b>nicht konfiguriert</b>"}</li>
-<li>Spotify: ${spotifyConnected() ? "verbunden" : spotifyConfigured() ? '<a href="/auth/spotify">jetzt verbinden</a>' : "<b>nicht konfiguriert</b>"}</li>
+<li>Google: ${googleConnected() ? 'verbunden &middot; <a href="/auth/google">Konto wechseln</a> &middot; <a href="/auth/google/disconnect">trennen</a>' : googleConfigured() ? '<a href="/auth/google">jetzt verbinden</a>' : "<b>nicht konfiguriert</b>"}</li>
+<li>Spotify: ${spotifyConnected() ? 'verbunden &middot; <a href="/auth/spotify">Konto wechseln</a> &middot; <a href="/auth/spotify/disconnect">trennen</a>' : spotifyConfigured() ? '<a href="/auth/spotify">jetzt verbinden</a>' : "<b>nicht konfiguriert</b>"}</li>
 <li>Notion: ${f.notion ? "konfiguriert" : "nicht konfiguriert"}</li>
 <li>Telefon: ${f.phone ? "konfiguriert" : "nicht konfiguriert"}</li>
 </ul><p>Status als JSON: <code>/api/status</code></p>`);
@@ -96,6 +96,18 @@ app.get("/auth/google/callback", wrap(async (req, res) => {
   await googleExchangeCode(req.query.code);
   done(res, "Google (Gmail + Kalender)");
 }));
+
+// Verbindung loesen - danach fuehrt /auth/... zu einer frischen Anmeldung.
+app.get("/auth/google/disconnect", (_req, res) => {
+  googleDisconnect();
+  res.type("html").send(`<meta charset=utf-8><body style="background:#02080c;color:#29f3ff;font:16px monospace;padding:40px">
+    Google getrennt. <a style="color:#29f3ff" href="/auth/google">Jetzt mit einem anderen Konto verbinden</a>.</body>`);
+});
+app.get("/auth/spotify/disconnect", (_req, res) => {
+  spotifyDisconnect();
+  res.type("html").send(`<meta charset=utf-8><body style="background:#02080c;color:#29f3ff;font:16px monospace;padding:40px">
+    Spotify getrennt. <a style="color:#29f3ff" href="/auth/spotify">Jetzt mit einem anderen Konto verbinden</a>.</body>`);
+});
 
 app.get("/auth/spotify", (_req, res) => {
   if (!spotifyConfigured()) return res.status(400).send("SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET fehlen.");
