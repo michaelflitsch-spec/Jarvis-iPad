@@ -31,6 +31,17 @@ export const settings = {
   get hasBackend() { return Boolean(read().backend); },
 };
 
+// Direktlinks für bekannte Boot-Songs. Damit öffnet der Notfall-Knopf den
+// Titel selbst statt einer Suchseite - ein Tipp genügt.
+// Die URI wurde gegen den Spotify-Katalog geprüft.
+export const KNOWN_TRACK_URLS = {
+  "back in black ac/dc": "https://open.spotify.com/track/08mG3Y1vljYA6bvDt4Wqkj",
+  "back in black acdc": "https://open.spotify.com/track/08mG3Y1vljYA6bvDt4Wqkj",
+};
+
+export const trackUrlFor = (query) =>
+  KNOWN_TRACK_URLS[String(query).toLowerCase().replace(/\s+/g, " ").trim()] || null;
+
 // Weckwort-Varianten: die Spracherkennung versteht "Jarvis" selten exakt.
 export const WAKE_PATTERNS = [
   "jarvis", "jarvis.", "jervis", "jarwis", "jarves", "charvis", "dscharvis",

@@ -108,7 +108,14 @@ und nur, wenn gerade ein Gerät aktiv ist. Praktisch heißt das: Spotify auf dem
 iPad einmal öffnen und kurz etwas abspielen, dann kennt Spotify das Gerät.
 
 Klappt es nicht, ist das kein Fehler – JARVIS zeigt dann einen Knopf
-**▶ BACK IN BLACK STARTEN**, der den Song mit einem Tipp öffnet.
+**▶ BACK IN BLACK STARTEN**, der den Song mit einem Tipp direkt öffnet.
+(Bei einem selbst gewählten Boot-Song führt der Knopf auf die Spotify-Suche,
+weil JARVIS den Titel dann nicht vorab kennt.)
+
+> **Nicht verwechseln:** Ein Spotify-Konnektor in Claude ist etwas anderes.
+> Der gehört zum Chat und kann nur suchen, Playlists anlegen und sagen, was
+> gerade läuft – er kann keine Wiedergabe starten. Damit JARVIS Musik abspielt,
+> braucht es die Verbindung hier über `/auth/spotify`.
 
 Anderen Boot-Song willst du? ⚙︎ → *Boot-Song* ändern.
 

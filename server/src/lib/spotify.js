@@ -107,8 +107,12 @@ export async function play({ query, uri, volume } = {}) {
   let track = null;
   let targetUri = uri || null;
   if (!targetUri) {
-    track = await searchTrack(query || config.spotify.bootTrackQuery);
-    targetUri = track?.uri || config.spotify.bootTrackUri || null;
+    const q = query || config.spotify.bootTrackQuery;
+    track = await searchTrack(q);
+    targetUri = track?.uri || null;
+    // Die hinterlegte URI gilt nur fuer den unveraenderten Boot-Song. Bei einem
+    // anderen Suchbegriff waere sie schlicht der falsche Titel.
+    if (!targetUri && q === config.spotify.bootTrackQuery) targetUri = config.spotify.bootTrackUri || null;
   }
   if (!targetUri) throw new Error("Kein passender Spotify-Track gefunden.");
 

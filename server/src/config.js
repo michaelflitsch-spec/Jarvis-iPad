@@ -55,9 +55,11 @@ export const config = {
   spotify: {
     clientId: process.env.SPOTIFY_CLIENT_ID || "",
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET || "",
-    // Wird nur als Fallback benutzt; primaer wird per Suche aufgeloest.
+    // Primaer wird der Track per Suche aufgeloest - das ueberlebt auch
+    // Katalogwechsel. Die URI dient nur als Rueckfall, wenn die Suche im
+    // Markt des Kontos nichts findet.
     bootTrackQuery: process.env.SPOTIFY_BOOT_TRACK || 'track:"Back In Black" artist:"AC/DC"',
-    bootTrackUri: process.env.SPOTIFY_BOOT_TRACK_URI || "",
+    bootTrackUri: process.env.SPOTIFY_BOOT_TRACK_URI || "spotify:track:08mG3Y1vljYA6bvDt4Wqkj",
     bootVolume: Number(process.env.SPOTIFY_BOOT_VOLUME || 70),
     duckVolume: Number(process.env.SPOTIFY_DUCK_VOLUME || 22),
     scopes: [

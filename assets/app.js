@@ -1,5 +1,5 @@
 // JARVIS - Ablaufsteuerung: Weckwort, Hochfahren mit Musik, Briefing, Gespräch.
-import { settings } from "./config.js";
+import { settings, trackUrlFor } from "./config.js";
 import { api, localWeather, OfflineError } from "./api.js";
 import { speak, stopSpeaking, isSpeaking, unlockAudio, dictateOnce, WakeListener, sttSupported, ttsSupported, onVoice } from "./voice.js";
 import { Waveform, Log, BootSequence } from "./hud.js";
@@ -117,15 +117,18 @@ async function refreshStatus() {
 async function startBootMusic() {
   const query = settings.get("bootTrack");
   if (!settings.get("music")) return { skipped: true };
+  // Direktlink, wenn wir den Titel kennen - sonst die Spotify-Suche.
+  const deepLink = trackUrlFor(query) || `https://open.spotify.com/search/${encodeURIComponent(query)}`;
+
   if (!api.online || !state.backend?.connected?.spotify) {
-    return { fallbackUrl: `https://open.spotify.com/search/${encodeURIComponent(query)}`, manual: true };
+    return { fallbackUrl: deepLink, manual: true };
   }
   try {
     const r = await api.playMusic(query);
     state.musicPlaying = true;
     return r;
   } catch (e) {
-    return { error: e.message, fallbackUrl: e.data?.fallbackUrl, track: e.data?.track, manual: true };
+    return { error: e.message, fallbackUrl: e.data?.fallbackUrl || deepLink, track: e.data?.track, manual: true };
   }
 }
 
