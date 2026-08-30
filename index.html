@@ -2,11 +2,14 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JARVIS">
-<title>JARVIS // iPad</title>
+<title>JARVIS // iPad v2.1</title>
 <style>
 :root{--c:#29f3ff;--dim:#57aeb5;--bg:#02080c}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -115,15 +118,16 @@ function add(t){log.innerHTML+='[JARVIS] '+t+'<br>';log.scrollTop=9999}
 async function speak(t){
  add(t);
  try{
-  const r=await fetch('http://localhost:3000/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t})});
-  const audio=new Audio(URL.createObjectURL(await r.blob()));
+  const audioUrl=`https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(t)}&tl=de&client=tw-ob`;
+  const audio=new Audio(audioUrl);
   audio.play();
  }catch(e){
   if('speechSynthesis' in window){
    speechSynthesis.cancel();
    let u=new SpeechSynthesisUtterance(t);
    u.lang='de-DE';
-   u.rate=.9;
+   u.rate=.85;
+   u.pitch=1;
    speechSynthesis.speak(u);
   }
  }
