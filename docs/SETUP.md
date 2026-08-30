@@ -112,6 +112,37 @@ Klappt es nicht, ist das kein Fehler – JARVIS zeigt dann einen Knopf
 
 Anderen Boot-Song willst du? ⚙︎ → *Boot-Song* ändern.
 
+### Wenn dein Spotify-Konto ein anderes ist als dein Google-Konto
+
+Das ist völlig in Ordnung – die Konten haben nichts miteinander zu tun.
+Wichtig sind nur zwei Dinge:
+
+1. **Das Konto, mit dem du dich bei der Freigabe anmeldest, ist das Konto,
+   dessen Musik JARVIS steuert.** Melde dich also mit genau dem Spotify-Konto
+   an, auf dem du Musik hörst – nicht zwingend mit dem, unter dem du die
+   Entwickler-App angelegt hast.
+2. **Die Entwickler-App steht im Entwicklungsmodus.** Dort darf nur zugreifen,
+   wer im Dashboard eingetragen ist. Sind App-Konto und Hör-Konto verschieden,
+   musst du das Hör-Konto freischalten: Dashboard → deine App →
+   **Settings → User Management** → Name und E-Mail-Adresse des Spotify-Kontos
+   eintragen. Ohne diesen Eintrag bricht die Freigabe mit einem Fehler ab.
+
+### Spotify-Konto wechseln
+
+`https://deine-backend-adresse/auth/spotify` erneut aufrufen – die Freigabe
+erscheint immer mit Auswahldialog, dort gibt es **„Als anderer Nutzer anmelden“**.
+
+Bleibt Spotify stur beim alten Konto, hängt die Browser-Sitzung: erst
+<https://accounts.spotify.com/logout> aufrufen (oder ein privates Fenster
+nehmen), dann die Freigabe neu starten.
+
+Gespeicherte Verbindung ganz verwerfen:
+`https://deine-backend-adresse/auth/spotify/disconnect`
+
+Für Google gilt dasselbe unter `/auth/google` bzw. `/auth/google/disconnect` –
+dort erscheint die Kontoauswahl von sich aus. Beide Links findest du auch auf
+der Statusseite deines Backends (einfach die Backend-Adresse im Browser öffnen).
+
 ---
 
 ## Schritt 5 – Notion
@@ -200,4 +231,6 @@ Fang mit `MAIL_CALL_THRESHOLD=5` an. Wenn dich JARVIS zu selten anruft, geh auf 
 | 401 im Log | `JARVIS_TOKEN` und der Zugriffsschlüssel im iPad stimmen nicht überein. |
 | Musik startet nicht | Kein Premium oder kein aktives Gerät. Spotify kurz öffnen und etwas abspielen, dann Neustart. |
 | Mails bleiben leer | Google verbunden? Im Backend-Status nachsehen. Im Test-Modus muss deine Adresse als Testnutzer eingetragen sein. |
+| Falsches Spotify-Konto verbunden | `/auth/spotify` erneut aufrufen und „Als anderer Nutzer anmelden“ wählen. Hilft das nicht: bei Spotify im Browser abmelden, dann `/auth/spotify/disconnect` und neu verbinden. |
+| Fehler bei der Spotify-Freigabe | Die App steht im Entwicklungsmodus. Das Hör-Konto unter *Settings → User Management* im Spotify-Dashboard eintragen. |
 | Weckwort schläft ein | iOS pausiert die Erkennung bei gesperrtem Bildschirm. Unter *Einstellungen → Anzeige → Automatische Sperre* auf *Nie* stellen, wenn JARVIS dauerhaft lauschen soll. |

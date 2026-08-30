@@ -62,6 +62,8 @@ nur dort liegen die Zugangsdaten.
   Cent-Bereich pro Tag.
 - **Spotify-Fernsteuerung**: braucht **Spotify Premium** und ein aktives Gerät.
   Ohne Premium zeigt JARVIS stattdessen einen Knopf, der den Song mit einem Tipp öffnet.
+  Das Spotify-Konto darf ein ganz anderes sein als das Google-Konto – Konto wechseln
+  geht über `/auth/spotify`, siehe [SETUP](docs/SETUP.md#spotify-konto-wechseln).
 - **Anruf**: Twilio kostet pro Anruf wenige Cent und braucht eine eigene Nummer.
   Kostenlose Alternative: ein Push-Webhook (z. B. ntfy.sh oder ein iOS-Kurzbefehl).
 - **Spracherkennung**: funktioniert in Safari ab iOS 14.5. Das Weckwort läuft nur,
