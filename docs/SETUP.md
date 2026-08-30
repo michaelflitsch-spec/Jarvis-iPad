@@ -96,6 +96,39 @@ JARVIS kann keine Mails verschicken oder löschen.
 
 ---
 
+## Der Boot-Sound
+
+Beim Hochfahren erzeugt JARVIS den Startklang **selbst**: einen aufsteigenden
+Sweep, wie ein Arc-Reaktor, der hochfährt. Kein Konto, kein Premium, keine
+Datei – und er blendet sich weich herunter, sobald JARVIS zu sprechen anfängt.
+
+**Eigene Musik statt des Sweeps:** Leg eine Datei als `assets/boot-intro.mp3`
+ab, dann nimmt JARVIS die. Fünfzehn bis zwanzig Sekunden passen zur Länge der
+Boot-Sequenz, unter 400 KB bleibt die Ladezeit kurz. Zuschneiden z. B. so:
+
+```bash
+ffmpeg -ss 0.95 -t 17 -i "dein-song.mp3" \
+  -af "afade=t=in:st=0:d=0.12,afade=t=out:st=15.5:d=1.5" \
+  -b:a 128k assets/boot-intro.mp3
+```
+
+> Die Datei ist über `.gitignore` ausgeschlossen und wird **nicht** eingecheckt.
+> Das ist Absicht: Dein Repository ist öffentlich, und eine gekaufte Aufnahme
+> dort zu veröffentlichen wäre etwas anderes, als sie privat auf dem eigenen
+> iPad zu hören. Willst du sie auf dem iPad hören, hast du zwei saubere Wege:
+> das Repository auf privat stellen (GitHub Pages braucht dafür einen bezahlten
+> Plan), oder ⚙︎ → *Boot-Sound* auf **Spotify** stellen.
+
+Umstellen unter ⚙︎ → *Boot-Sound*:
+
+| Einstellung | Was passiert |
+|---|---|
+| **Lokaler Startklang** (Standard) | Eigene `boot-intro.mp3`, falls vorhanden – sonst der erzeugte Sweep |
+| **Voller Track über Spotify** | Der ganze Song auf deinem Spotify-Gerät – braucht Premium und ein aktives Gerät (Schritt 4) |
+| **Still hochfahren** | Nur die Boot-Sequenz, kein Ton |
+
+---
+
 ## Schritt 4 – Spotify
 
 1. <https://developer.spotify.com/dashboard> → **Create app**.

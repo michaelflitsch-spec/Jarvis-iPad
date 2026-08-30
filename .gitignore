@@ -2,4 +2,9 @@ node_modules/
 server/.env
 server/data/
 *.log
+
+# Eigene Boot-Musik bleibt lokal. Eine gekaufte Aufnahme gehört nicht in ein
+# öffentliches Repository - ohne die Datei erzeugt JARVIS den Startklang selbst.
+assets/boot-intro.mp3
+assets/boot-intro.*
 .DS_Store

@@ -49,7 +49,8 @@ nur dort liegen die Zugangsdaten.
 
 - **Weckwort** „Jarvis“ – dauerhaftes Lauschen, mit direkt angehängtem Befehl
   („Jarvis, lies meine Mails“)
-- **Boot-Sequenz** mit Musik über Spotify, Terminal-Log und Arc-Reaktor
+- **Boot-Sequenz** mit Terminal-Log, Arc-Reaktor und Klang: der Startsweep wird
+  selbst erzeugt, eigene `assets/boot-intro.mp3` wird bevorzugt, Spotify optional
 - **Briefing**: Wetter, offene Aufgaben, Termine heute, neue Mails nach Wichtigkeit
 - **Gespräch** über Claude mit Werkzeugen: Mails lesen, Termine anlegen,
   Aufgaben verwalten, Musik steuern, Tages-/Wochenplan in Notion schreiben
@@ -61,7 +62,9 @@ nur dort liegen die Zugangsdaten.
 - **Claude-API**: nach Verbrauch. Ein Briefing plus ein paar Fragen liegt im
   Cent-Bereich pro Tag.
 - **Spotify-Fernsteuerung**: braucht **Spotify Premium** und ein aktives Gerät.
-  Ohne Premium zeigt JARVIS stattdessen einen Knopf, der den Song mit einem Tipp öffnet.
+  Nur nötig, wenn du beim Hochfahren den *ganzen* Song willst – das mitgelieferte
+  Intro läuft ohne all das. Ohne Premium zeigt JARVIS einen Knopf, der den Song
+  mit einem Tipp öffnet.
   Das Spotify-Konto darf ein ganz anderes sein als das Google-Konto – Konto wechseln
   geht über `/auth/spotify`, siehe [SETUP](docs/SETUP.md#spotify-konto-wechseln).
 - **Anruf**: Twilio kostet pro Anruf wenige Cent und braucht eine eigene Nummer.

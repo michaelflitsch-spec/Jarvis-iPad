@@ -10,6 +10,10 @@ const defaults = {
   wakeWord: true,         // dauerhaft auf "Jarvis" lauschen
   autoBriefing: true,     // nach dem Hochfahren automatisch briefen
   music: true,            // beim Hochfahren Musik starten
+  // "local"   = mitgeliefertes Intro, spielt immer und sofort
+  // "spotify" = kompletter Track auf deinem Spotify-Gerät (braucht Premium)
+  // "off"     = still hochfahren
+  bootSound: "local",
   bootTrack: "Back In Black AC/DC",
   voiceRate: 0.95,
   voicePitch: 0.85,

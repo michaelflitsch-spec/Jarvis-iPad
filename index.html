@@ -174,7 +174,16 @@
       <input id="set-city" placeholder="z. B. München">
     </div>
     <div class="field">
-      <label>BOOT-SONG</label>
+      <label>BOOT-SOUND</label>
+      <select id="set-sound">
+        <option value="local">Lokaler Startklang (spielt immer)</option>
+        <option value="spotify">Voller Track über Spotify (braucht Premium)</option>
+        <option value="off">Still hochfahren</option>
+      </select>
+      <div class="hint">Startet ohne Umweg: eigene <code>assets/boot-intro.mp3</code>, sonst ein selbst erzeugter Sweep. Spotify spielt den ganzen Song auf deinem Gerät.</div>
+    </div>
+    <div class="field">
+      <label>BOOT-SONG (nur für Spotify)</label>
       <input id="set-track" placeholder="Back In Black AC/DC">
     </div>
     <div class="field" style="display:flex;gap:16px;flex-wrap:wrap;font-size:10px;color:var(--c-dim)">

@@ -4,6 +4,7 @@ import { api, localWeather, OfflineError } from "./api.js";
 import { speak, stopSpeaking, isSpeaking, unlockAudio, dictateOnce, WakeListener, sttSupported, ttsSupported, onVoice } from "./voice.js";
 import { Waveform, Log, BootSequence } from "./hud.js";
 import { TaskManager } from "./tasks.js";
+import { BootSound } from "./sound.js";
 
 const $ = (s) => document.querySelector(s);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -23,6 +24,7 @@ const el = {
 const log = new Log(el.log);
 const wave = new Waveform(el.wave);
 const boot = new BootSequence(el.boot);
+const bootSound = new BootSound();
 const started = Date.now();
 
 const tasks = new TaskManager({
@@ -113,10 +115,25 @@ async function refreshStatus() {
 
 /* -------------------------------- Musik ----------------------------------- */
 
-/** Startet den Boot-Song. Ohne Backend gibt es einen Deeplink zum Antippen. */
+/**
+ * Startet den Boot-Song. Das mitgelieferte Intro laeuft immer und sofort;
+ * Spotify ist die Alternative fuer den kompletten Track.
+ */
 async function startBootMusic() {
   const query = settings.get("bootTrack");
-  if (!settings.get("music")) return { skipped: true };
+  const mode = settings.get("bootSound");
+  if (!settings.get("music") || mode === "off") return { skipped: true };
+
+  if (mode === "local") {
+    if (bootSound.play({ volume: 0.85 })) {
+      state.musicPlaying = "local";
+      return { local: true, title: bootSound.label };
+    }
+    // Konnte das Intro nicht starten (nicht geladen, Audio gesperrt),
+    // dann wenigstens ueber Spotify probieren statt still zu bleiben.
+    log.add(bootSound.loadError || "Intro konnte nicht abgespielt werden.", "s");
+  }
+
   // Direktlink, wenn wir den Titel kennen - sonst die Spotify-Suche.
   const deepLink = trackUrlFor(query) || `https://open.spotify.com/search/${encodeURIComponent(query)}`;
 
@@ -125,19 +142,27 @@ async function startBootMusic() {
   }
   try {
     const r = await api.playMusic(query);
-    state.musicPlaying = true;
+    state.musicPlaying = "spotify";
     return r;
   } catch (e) {
     return { error: e.message, fallbackUrl: e.data?.fallbackUrl || deepLink, track: e.data?.track, manual: true };
   }
 }
 
+/** Musik leiser drehen, sobald JARVIS spricht. */
 async function duckMusic() {
-  if (!state.musicPlaying) return;
+  if (state.musicPlaying === "local") return bootSound.duck(0.16, 1.4);
+  if (state.musicPlaying !== "spotify") return;
   try { await api.musicVolume(22); } catch { /* nicht alle Geraete lassen sich fernsteuern */ }
 }
 
 async function stopMusic() {
+  if (state.musicPlaying === "local") {
+    bootSound.stop(1.2);
+    state.musicPlaying = false;
+    log.add("Intro ausgeblendet.", "s");
+    return;
+  }
   if (!api.online) return;
   try { await api.pauseMusic(); state.musicPlaying = false; log.add("Musik pausiert.", "s"); }
   catch { log.add("Musik konnte nicht pausiert werden.", "s"); }
@@ -172,12 +197,15 @@ async function runBootSequence(trailingCommand = "") {
 
   // Musik parallel starten, damit sie waehrend der restlichen Sequenz laeuft.
   const musicPromise = startBootMusic();
-  await boot.line("> AUDIO / SPOTIFY .................. ", "", 8);
+  await boot.line("> AUDIO ............................ ", "", 8);
   const music = await musicPromise;
   const lastLine = boot.logEl.lastElementChild;
 
   if (music.skipped) {
     lastLine.innerHTML += '<span class="warnline">DEAKTIVIERT</span>';
+  } else if (music.local) {
+    lastLine.innerHTML += '<span class="ok">WIEDERGABE</span>';
+    boot.nowPlaying(music.title);
   } else if (music.manual || music.error) {
     lastLine.innerHTML += '<span class="warnline">MANUELL</span>';
     showMusicFallback(music.fallbackUrl, music.track);
@@ -475,6 +503,7 @@ function openSettings() {
   $("#set-name").value = s.name;
   $("#set-city").value = s.city;
   $("#set-track").value = s.bootTrack;
+  $("#set-sound").value = s.bootSound;
   $("#set-wake").checked = s.wakeWord;
   $("#set-music").checked = s.music;
   $("#set-briefing").checked = s.autoBriefing;
@@ -499,6 +528,7 @@ async function saveSettings() {
     name: $("#set-name").value.trim() || "Sir",
     city: $("#set-city").value.trim(),
     bootTrack: $("#set-track").value.trim() || "Back In Black AC/DC",
+    bootSound: $("#set-sound").value,
     wakeWord: $("#set-wake").checked,
     music: $("#set-music").checked,
     autoBriefing: $("#set-briefing").checked,
@@ -513,7 +543,8 @@ async function saveSettings() {
 /* -------------------------------- Verdrahtung ------------------------------ */
 
 el.gateBtn.addEventListener("click", async () => {
-  unlockAudio();                       // iOS: Audio hier freischalten
+  unlockAudio();                       // iOS: Sprachausgabe hier freischalten
+  bootSound.unlock();                  // und den Boot-Sound vorladen
   await refreshStatus();
   startWakeListener();
   el.gate.classList.add("hidden");
@@ -527,6 +558,7 @@ el.gateBtn.addEventListener("click", async () => {
 
 $("#gate-boot").addEventListener("click", async () => {
   unlockAudio();
+  await bootSound.unlock();            // vor dem Hochfahren fertig laden
   await refreshStatus();
   startWakeListener();
   bootUp();
