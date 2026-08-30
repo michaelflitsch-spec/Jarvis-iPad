@@ -1,0 +1,208 @@
+/* JARVIS // iPad - Iron-Man-HUD */
+:root{
+  --c:#29f3ff; --c-dim:#57aeb5; --c-soft:#8fffff; --c-warm:#ffb648; --c-alert:#ff5f6d;
+  --bg:#02080c; --panel:rgba(1,18,25,.72); --line:rgba(41,243,255,.42);
+  --font:-apple-system,BlinkMacSystemFont,"SF Mono","SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#a9fbff;font-family:var(--font);
+  -webkit-user-select:none;user-select:none;overscroll-behavior:none}
+body{background:radial-gradient(circle at 50% 45%,#063844 0,#02141b 20%,#02080c 55%,#010507 100%)}
+/* Raster + Scanlines: der typische HUD-Untergrund */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.3;z-index:0;
+  background:linear-gradient(rgba(41,243,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(41,243,255,.055) 1px,transparent 1px);
+  background-size:42px 42px}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;mix-blend-mode:screen;
+  background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(41,243,255,.022) 4px)}
+button{font-family:var(--font)}
+.hidden{display:none !important}
+
+/* ------------------------------- Grundraster ------------------------------ */
+.app{position:relative;z-index:1;height:100%;padding:14px;display:grid;gap:10px;
+  grid-template-columns:238px 1fr 264px;grid-template-rows:74px 1fr 120px;
+  padding-top:max(14px,env(safe-area-inset-top));padding-bottom:max(14px,env(safe-area-inset-bottom))}
+.panel{position:relative;overflow:hidden;border:1px solid var(--line);background:var(--panel);border-radius:5px;
+  box-shadow:0 0 25px rgba(0,220,255,.08),inset 0 0 25px rgba(0,220,255,.04)}
+/* Ecken-Winkel an jedem Panel */
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--c);opacity:.75}
+.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+
+.header{grid-column:1/4;display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+.logo{font-size:23px;letter-spacing:6px;text-shadow:0 0 15px var(--c);color:#dfffff}
+.sub{font-size:9px;color:var(--c-dim);letter-spacing:1.4px;margin-top:4px}
+.status-strip{display:flex;gap:14px;align-items:center;font-size:9px;letter-spacing:1px}
+.chip{display:flex;align-items:center;gap:5px;color:var(--c-dim)}
+.chip i{width:7px;height:7px;border-radius:50%;background:#123;box-shadow:0 0 8px transparent;transition:.3s}
+.chip.on i{background:#64ffdc;box-shadow:0 0 10px #64ffdc}
+.chip.warn i{background:var(--c-warm);box-shadow:0 0 10px var(--c-warm)}
+
+.left,.right{padding:13px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.center{display:flex;align-items:center;justify-content:center;flex-direction:column}
+.section{font-size:9.5px;letter-spacing:2px;border-bottom:1px solid rgba(41,243,255,.25);
+  padding-bottom:6px;margin:0 0 10px;color:#c5ffff;display:flex;justify-content:space-between;align-items:center}
+.section span{color:var(--c-dim);letter-spacing:.5px}
+.metric{display:flex;justify-content:space-between;font-size:10px;margin:8px 0 3px}
+.bar{height:3px;background:#08242a;border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c);transition:width .6s}
+.clock{text-align:center;font-size:27px;letter-spacing:2px;text-shadow:0 0 15px var(--c);margin:10px 0 2px;color:#dfffff}
+.date{text-align:center;font-size:9px;color:var(--c-dim);letter-spacing:1px}
+.weather{text-align:center;margin:16px 0 6px}
+.weather b{display:block;font-size:26px;color:#dfffff;text-shadow:0 0 14px var(--c)}
+.weather small{display:block;font-size:9.5px;color:var(--c-dim);margin-top:4px;line-height:1.5}
+.event,.mail{font-size:9.5px;border-left:2px solid var(--c);padding:6px 8px;margin:6px 0;background:rgba(41,243,255,.05);line-height:1.45}
+.event b,.mail b{color:#dfffff;font-weight:400}
+.mail.urgent{border-left-color:var(--c-alert);background:rgba(255,95,109,.08)}
+.mail .from{color:var(--c-dim);font-size:8.5px;display:block;margin-top:2px}
+.empty{font-size:9px;color:#3f7b80;padding:6px 0}
+.hintbox{font-size:9px;color:var(--c-dim);line-height:1.75}
+.hintbox b{color:var(--c-soft);font-weight:400}
+.divider{width:1px;align-self:stretch;background:rgba(41,243,255,.25);margin:0 3px}
+
+/* --------------------------------- Reaktor -------------------------------- */
+.arc{position:relative;width:min(46vh,min(48vw,420px));aspect-ratio:1;border-radius:50%;display:grid;place-items:center}
+.arc>*{position:absolute;border-radius:50%}
+.ring{inset:2%;border:1px solid var(--c);box-shadow:0 0 25px rgba(41,243,255,.3)}
+.ring.dash{inset:10%;border:2px dashed rgba(41,243,255,.45);animation:spin 16s linear infinite}
+.ring.dot{inset:18%;border:1px dotted rgba(41,243,255,.5);animation:spin 24s linear infinite reverse}
+.ring.seg{inset:25%;border:1px solid transparent;border-top:3px solid var(--c);border-bottom:3px solid rgba(41,243,255,.2);animation:spin 10s linear infinite}
+.core{position:relative;width:36%;height:36%;display:grid;place-items:center;border:2px solid var(--c);
+  background:radial-gradient(circle,#0c8996 0,#06323c 26%,#020b10 70%);
+  box-shadow:0 0 35px #00eaff,inset 0 0 28px rgba(41,243,255,.55);transition:box-shadow .3s,transform .3s}
+.core b{font-size:clamp(20px,4.5vh,34px);letter-spacing:3px;color:#dfffff;text-shadow:0 0 20px #fff;font-weight:400}
+.speaking .core{animation:pulse 1.1s ease-in-out infinite}
+.speaking .ring.seg{animation-duration:3.5s}
+.listening .core{box-shadow:0 0 45px var(--c-warm),inset 0 0 28px rgba(255,182,72,.5);border-color:var(--c-warm)}
+.listening .core b{color:var(--c-warm);text-shadow:0 0 20px var(--c-warm)}
+#wave{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 30px #00eaff,inset 0 0 24px rgba(41,243,255,.5);transform:scale(1)}
+  50%{box-shadow:0 0 70px #6cf6ff,inset 0 0 36px rgba(41,243,255,.85);transform:scale(1.045)}}
+.scan{position:absolute;left:0;width:100%;height:1px;background:var(--c);box-shadow:0 0 15px var(--c);animation:scan 4.5s linear infinite;opacity:.55;z-index:2}
+@keyframes scan{0%{top:8%;opacity:0}12%{opacity:.7}88%{opacity:.7}100%{top:92%;opacity:0}}
+
+/* Untertitel dessen, was JARVIS gerade sagt */
+.subtitle{margin-top:14px;max-width:min(92%,640px);text-align:center;font-size:12.5px;line-height:1.65;
+  color:#cffcff;min-height:2.6em;text-shadow:0 0 12px rgba(41,243,255,.45);padding:0 10px}
+.subtitle:empty::after{content:"Bereit.";color:#2f6b70}
+
+/* --------------------------------- Fußzeile -------------------------------- */
+.footer{grid-column:2/4;padding:10px;display:grid;gap:8px;grid-template-columns:1fr auto;grid-template-rows:auto auto}
+.log{font-size:9px;color:var(--c-dim);line-height:1.55;height:48px;overflow-y:auto;padding-right:4px}
+.log .u{color:var(--c-warm)}
+.log .j{color:var(--c-soft)}
+.log .s{color:#3f7b80}
+.quick{display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start;justify-content:flex-end;max-width:400px}
+.btn{display:inline-block;border:1px solid rgba(41,243,255,.45);background:rgba(41,243,255,.06);color:var(--c-soft);
+  padding:6px 9px;font-size:8.5px;letter-spacing:.8px;border-radius:3px;cursor:pointer;transition:.15s;
+  text-decoration:none;font-family:var(--font)}
+.btn:active{background:rgba(41,243,255,.24);transform:scale(.96)}
+.btn.warm{border-color:rgba(255,182,72,.5);color:var(--c-warm)}
+.command{grid-column:1/3;display:flex;gap:6px;align-items:center;border:1px solid rgba(41,243,255,.3);padding:6px 8px;border-radius:3px}
+.command>span{color:var(--c);font-size:12px}
+.command input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:#dfffff;font:12px var(--font)}
+.command input::placeholder{color:#356e73}
+.mic{font-size:15px;padding:5px 11px}
+.mic.active{background:rgba(255,182,72,.2);border-color:var(--c-warm)}
+
+/* ------------------------------ Startbildschirm ---------------------------- */
+.gate{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,#062f3a 0,#010609 65%);text-align:center}
+.gate .arc{width:min(52vh,min(70vw,400px))}
+.gate h1{font-size:clamp(26px,7vw,54px);letter-spacing:min(14px,3vw);margin:26px 0 6px;color:#dfffff;text-shadow:0 0 30px var(--c);font-weight:400}
+.gate p{font-size:11px;color:var(--c-dim);letter-spacing:2px;margin:0 0 26px}
+.gate .tap{border:1px solid var(--c);background:rgba(41,243,255,.08);color:#dfffff;padding:15px 34px;font-size:12px;
+  letter-spacing:3px;border-radius:4px;cursor:pointer;animation:breathe 2.6s ease-in-out infinite}
+@keyframes breathe{0%,100%{box-shadow:0 0 0 rgba(41,243,255,0)}50%{box-shadow:0 0 34px rgba(41,243,255,.6)}}
+.gate .fine{margin-top:20px;font-size:9px;color:#2f6b70;line-height:1.7;max-width:340px}
+
+/* ------------------------------- Boot-Sequenz ------------------------------ */
+.boot{position:fixed;inset:0;z-index:45;display:grid;place-items:center;background:#01060a;
+  animation:bootIn .5s ease-out}
+@keyframes bootIn{from{opacity:0}to{opacity:1}}
+.boot.out{animation:bootOut .9s ease-in forwards}
+@keyframes bootOut{to{opacity:0;transform:scale(1.12);visibility:hidden}}
+.boot-inner{display:flex;flex-direction:column;align-items:center;gap:22px;width:100%;padding:20px}
+.boot .arc{width:min(40vh,min(60vw,340px));animation:bootArc 1.6s cubic-bezier(.2,.9,.2,1)}
+@keyframes bootArc{from{transform:scale(.25) rotate(-140deg);opacity:0;filter:blur(8px)}to{transform:none;opacity:1;filter:none}}
+.boot-log{font-size:10px;line-height:1.9;color:var(--c-dim);letter-spacing:1px;width:min(94%,540px);
+  height:132px;overflow:hidden;text-align:left}
+.boot-log b{color:var(--c-soft);font-weight:400}
+.boot-log .ok{color:#64ffdc}
+.boot-log .warnline{color:var(--c-warm)}
+.now-playing{display:flex;align-items:center;gap:10px;border:1px solid rgba(41,243,255,.35);padding:8px 16px;
+  border-radius:40px;font-size:10px;letter-spacing:1.4px;color:var(--c-soft);background:rgba(1,18,25,.7)}
+.eq{display:flex;gap:2px;align-items:flex-end;height:14px}
+.eq i{width:2.5px;background:var(--c);box-shadow:0 0 6px var(--c);animation:eq .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}
+.eq i:nth-child(4){animation-delay:.45s}.eq i:nth-child(5){animation-delay:.6s}
+@keyframes eq{0%,100%{height:3px}50%{height:14px}}
+
+/* --------------------------- Taskmanager-Fenster --------------------------- */
+.win{position:fixed;z-index:35;width:min(330px,88vw);border:1px solid var(--line);background:rgba(1,18,25,.94);
+  border-radius:5px;box-shadow:0 18px 60px rgba(0,0,0,.65),0 0 30px rgba(0,220,255,.12);backdrop-filter:blur(7px);
+  animation:winIn .35s cubic-bezier(.2,.9,.25,1)}
+@keyframes winIn{from{opacity:0;transform:translateY(14px) scale(.95)}to{opacity:1;transform:none}}
+.win-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;
+  border-bottom:1px solid rgba(41,243,255,.25);cursor:move;touch-action:none}
+.win-bar b{font-size:9.5px;letter-spacing:2px;color:#c5ffff;font-weight:400}
+.win-bar .x{border:0;background:transparent;color:var(--c-dim);font-size:14px;cursor:pointer;padding:0 4px;line-height:1}
+.win-body{padding:10px;max-height:min(46vh,340px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.task{display:flex;gap:8px;align-items:flex-start;font-size:10.5px;padding:7px 4px;border-bottom:1px solid rgba(41,243,255,.1)}
+.task:last-child{border-bottom:0}
+.task .tick{flex:none;width:15px;height:15px;border:1px solid var(--c);border-radius:3px;background:transparent;
+  cursor:pointer;color:var(--c);font-size:10px;line-height:13px;padding:0}
+.task .tick:active{background:rgba(41,243,255,.3)}
+.task .t{flex:1;line-height:1.45;color:#cffcff}
+.task .due{display:block;font-size:8.5px;color:var(--c-dim);margin-top:2px;letter-spacing:.5px}
+.task.late .due{color:var(--c-alert)}
+.task .rm{border:0;background:transparent;color:#2f6b70;cursor:pointer;font-size:12px;padding:0 2px}
+.win-add{display:flex;gap:6px;padding:9px 10px;border-top:1px solid rgba(41,243,255,.22)}
+.win-add input{flex:1;min-width:0;background:rgba(41,243,255,.05);border:1px solid rgba(41,243,255,.22);
+  color:#dfffff;font:11px var(--font);padding:6px 8px;border-radius:3px;outline:0}
+
+/* --------------------------------- Settings -------------------------------- */
+.sheet{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:rgba(1,6,10,.86);backdrop-filter:blur(4px);padding:18px}
+.sheet-card{width:min(460px,100%);max-height:88vh;overflow-y:auto;border:1px solid var(--line);background:rgba(1,18,25,.97);border-radius:6px;padding:20px}
+.sheet-card h2{font-size:13px;letter-spacing:3px;margin:0 0 4px;color:#dfffff;font-weight:400}
+.sheet-card p.lead{font-size:9.5px;color:var(--c-dim);line-height:1.7;margin:0 0 16px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:9px;letter-spacing:1.4px;color:var(--c-dim);margin-bottom:5px}
+.field input{width:100%;background:rgba(41,243,255,.05);border:1px solid rgba(41,243,255,.25);color:#dfffff;
+  font:12px var(--font);padding:9px 10px;border-radius:3px;outline:0}
+.field .hint{font-size:8.5px;color:#3f7b80;margin-top:4px;line-height:1.6}
+.sheet-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.links{margin-top:14px;font-size:9px;line-height:1.9;color:var(--c-dim)}
+.links a{color:var(--c)}
+
+/* --------------------------------- iPad/iPhone ----------------------------- */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr 1fr;grid-template-rows:62px 1fr 166px;padding:8px;gap:7px}
+  .header{grid-column:1/3}
+  .left{display:none}
+  .right{grid-column:1/3;position:absolute;right:8px;top:78px;width:196px;z-index:3;
+    background:rgba(1,18,25,.93);max-height:calc(100% - 250px);transform:scale(.9);transform-origin:top right}
+  .center{grid-column:1/3;grid-row:2}
+  .arc{width:min(40vh,72vw)}
+  .logo{font-size:18px;letter-spacing:4px}
+  /* Fußzeile stapelt sich: Log, Schnellbefehle als Scroll-Leiste, Befehlszeile. */
+  .footer{grid-column:1/3;grid-row:3;grid-template-columns:1fr;grid-template-rows:auto auto auto;padding:8px;gap:6px}
+  .log{height:34px}
+  .quick{grid-column:1;max-width:none;justify-content:flex-start;flex-wrap:nowrap;
+    overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+  .quick::-webkit-scrollbar{display:none}
+  .quick .btn{flex:none}
+  .command{grid-column:1}
+}
+@media(max-height:620px){
+  .app{grid-template-rows:54px 1fr 104px}
+  .arc{width:min(48vh,320px)}
+  .subtitle{font-size:11px;min-height:2em;margin-top:8px}
+  .right{top:66px}
+  .log{height:30px}
+}
+/* Sehr schmal (iPhone): Fußzeile bekommt mehr Luft. */
+@media(max-width:520px){
+  .app{grid-template-rows:58px 1fr 162px}
+  .right{width:170px;max-height:calc(100% - 260px)}
+  .quick .btn{font-size:8px;padding:5px 7px}
+}
