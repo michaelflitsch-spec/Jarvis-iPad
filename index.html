@@ -115,21 +115,16 @@ async function weather(){
 } weather();
 
 function add(t){log.innerHTML+='[JARVIS] '+t+'<br>';log.scrollTop=9999}
-async function speak(t){
+function speak(t){
  add(t);
- try{
-  const audioUrl=`https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(t)}&tl=de&client=tw-ob`;
-  const audio=new Audio(audioUrl);
-  audio.play();
- }catch(e){
-  if('speechSynthesis' in window){
-   speechSynthesis.cancel();
-   let u=new SpeechSynthesisUtterance(t);
-   u.lang='de-DE';
-   u.rate=.85;
-   u.pitch=1;
-   speechSynthesis.speak(u);
-  }
+ if('speechSynthesis' in window){
+  speechSynthesis.cancel();
+  let u=new SpeechSynthesisUtterance(t);
+  u.lang='de-DE';
+  u.rate=0.9;
+  u.pitch=0.8;
+  u.volume=1;
+  speechSynthesis.speak(u);
  }
 }
 function cmd(t){input.value=t;run()}
