@@ -31,6 +31,14 @@ nur dort liegen die Zugangsdaten.
 
 ## Schnellstart
 
+**Erst mal ansehen** – auf dem eigenen Rechner, ohne jede Einrichtung:
+
+```bash
+./scripts/dev.sh      # dann http://localhost:8000 öffnen
+```
+
+Für den Betrieb auf dem iPad:
+
 1. **Frontend veröffentlichen** – im GitHub-Repo unter *Settings → Pages* die Quelle
    auf den Branch stellen. Danach `https://<name>.github.io/Jarvis-iPad/` auf dem
    iPad in Safari öffnen und über *Teilen → Zum Home-Bildschirm* ablegen.

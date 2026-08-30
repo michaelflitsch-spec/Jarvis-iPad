@@ -8,7 +8,29 @@ auf dem iPad spricht, das Wetter sagt und den Aufgabenspeicher führt.
 
 ---
 
+## Schritt 0 – Erst mal ausprobieren (2 Minuten)
+
+Am schnellsten testest du alles auf deinem Rechner:
+
+```bash
+./scripts/dev.sh
+```
+
+Dann <http://localhost:8000> öffnen, auf **AKTIVIEREN** tippen, Mikrofon
+erlauben – und „Jarvis" sagen.
+
+**Nimm localhost, nicht die IP-Adresse.** Die Spracherkennung läuft nur in
+einem sicheren Kontext, und das sind ausschließlich HTTPS-Seiten und
+`localhost`. Über `http://192.168.…` bleibt das Mikrofon stumm – die
+Oberfläche erscheint, aber das Weckwort reagiert nie. Genau deshalb braucht
+der Test auf dem iPad HTTPS, siehe Schritt 1.
+
+---
+
 ## Schritt 1 – Oberfläche aufs iPad (5 Minuten)
+
+GitHub Pages liefert die Seite über HTTPS aus – und nur damit gibt Safari auf
+dem iPad das Mikrofon frei.
 
 1. Im GitHub-Repo auf **Settings → Pages** gehen.
 2. Unter *Build and deployment* als Quelle **Deploy from a branch** wählen,
@@ -46,8 +68,21 @@ dort steht, welche Systeme schon konfiguriert sind.
 
 ### Damit das iPad ihn erreicht
 
-Zum Ausprobieren im gleichen WLAN genügt die lokale IP deines Rechners
-(`PUBLIC_URL=http://192.168.x.x:8787`).
+Zum Ausprobieren am selben Rechner genügt `PUBLIC_URL=http://localhost:8787`.
+
+**Vom iPad aus geht das nicht so einfach.** Steht die Oberfläche auf GitHub
+Pages (HTTPS), blockiert der Browser jede Anfrage an ein `http://`-Backend –
+das ist die Mixed-Content-Sperre, und sie lässt sich nicht abschalten. Das
+Backend braucht also ebenfalls HTTPS. Zum schnellen Testen genügt ein Tunnel:
+
+```bash
+# in einem zweiten Terminal, während dev.sh läuft
+cloudflared tunnel --url http://localhost:8787
+```
+
+Das gibt dir eine `https://…trycloudflare.com`-Adresse. Die trägst du als
+`PUBLIC_URL` in die `.env` ein **und** im iPad unter ⚙︎ als Backend-Adresse.
+Für den Dauerbetrieb nimmst du besser einen richtigen Hoster (siehe unten).
 
 Für den Dauerbetrieb brauchst du eine feste Adresse. Bewährt haben sich Hoster
 wie Render, Railway oder Fly.io – überall gilt dasselbe Muster:
