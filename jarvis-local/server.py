@@ -15,6 +15,8 @@ from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from jarvis import config as config_module
@@ -72,7 +74,7 @@ class SpeakIn(BaseModel):
 
 class VisionIn(BaseModel):
     mode: str = "mathe"
-    question: str | None = None
+    question: Optional[str] = None
     export: bool = False
 
 

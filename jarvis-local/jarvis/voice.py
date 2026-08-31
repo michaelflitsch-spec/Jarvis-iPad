@@ -90,7 +90,11 @@ class Voice:
         system = platform.system()
         command: list[str] | None = None
         if system == "Darwin":
-            command = ["say", "-v", "Markus", text]
+            # Die deutschen Stimmen sind nicht auf jedem Mac installiert.
+            # Fehlt sie, bricht "say -v Markus" ab - dann lieber die
+            # Standardstimme als gar nichts.
+            command = (["say", "-v", "Markus", text] if _macos_voice_exists("Markus")
+                       else ["say", text])
         elif system == "Linux" and shutil.which("espeak-ng"):
             command = ["espeak-ng", "-v", "de", text]
         elif system == "Windows":
@@ -111,6 +115,15 @@ class Voice:
             return True
         except (OSError, subprocess.SubprocessError):
             return False
+
+
+def _macos_voice_exists(name: str) -> bool:
+    try:
+        result = subprocess.run(["say", "-v", "?"], capture_output=True,
+                                text=True, timeout=8)
+        return name.lower() in (result.stdout or "").lower()
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 
 def _play(path: Path, blocking: bool = True) -> bool:

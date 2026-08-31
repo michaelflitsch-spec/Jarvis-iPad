@@ -154,39 +154,49 @@ def arrange(app: dict) -> bool:
     x, y, width, height = _rect(position)
 
     if SYSTEM == "Darwin":
-        return _arrange_macos(binary, x, y, width, height, position)
+        return _arrange_macos(binary, x, y, width, height, position,
+                              app.get("process_name", ""))
     if SYSTEM == "Windows":
         return _arrange_windows(binary, x, y, width, height)
     return _arrange_linux(binary, x, y, width, height)
 
 
-def _arrange_macos(app_name: str, x: int, y: int, w: int, h: int, position: str) -> bool:
+def _arrange_macos(app_name: str, x: int, y: int, w: int, h: int,
+                   position: str, process_name: str = "") -> bool:
+    """Fenster einer App positionieren.
+
+    Der Prozessname in System Events ist nicht der App-Name: "Visual Studio
+    Code" laeuft als Prozess "Code". Statt das zu raten, aktivieren wir die App
+    ueber ihren Namen (das versteht AppleScript zuverlaessig) und greifen dann
+    auf den Prozess zu, der gerade im Vordergrund ist. `process_name` in der
+    config.json ueberschreibt das, falls eine App aus der Reihe tanzt.
+    """
     if position == "fullscreen":
-        script = f'''
-        tell application "System Events"
-          try
-            tell process "{app_name}"
-              set frontmost to true
-              set position of front window to {{0, 0}}
-              set size of front window to {{{w}, {h}}}
-            end tell
-          end try
-        end tell'''
-    else:
-        script = f'''
-        tell application "System Events"
-          try
-            tell process "{app_name}"
-              set frontmost to true
-              set position of front window to {{{x}, {y}}}
-              set size of front window to {{{w}, {h}}}
-            end tell
-          end try
-        end tell'''
+        x, y = 0, 0
+
+    # Korrekt geschachtelt: "tell A to tell B" waere eine Einzeiler-Form und
+    # vertraegt sich nicht mit einem Block plus "end tell".
+    target = (f'process "{process_name}"' if process_name
+              else "(first application process whose frontmost is true)")
+
+    script = f'''
+    tell application "{app_name}" to activate
+    delay 0.4
+    try
+      tell application "System Events"
+        tell {target}
+          set position of front window to {{{x}, {y}}}
+          set size of front window to {{{w}, {h}}}
+        end tell
+      end tell
+    on error errText number errNum
+      return "FEHLER " & errNum & ": " & errText
+    end try
+    return "OK"'''
     try:
         result = subprocess.run(["osascript", "-e", script],
-                                capture_output=True, text=True, timeout=12)
-        return result.returncode == 0
+                                capture_output=True, text=True, timeout=15)
+        return result.returncode == 0 and "OK" in (result.stdout or "")
     except (OSError, subprocess.SubprocessError):
         return False
 

@@ -1,3 +1,6 @@
+# Benoetigt Python 3.10 oder neuer.
+# macOS bringt nur 3.9 mit -> brew install python@3.12
+
 # --- Kern (zwingend) ---
 anthropic>=0.40.0          # Claude: Chat, Briefing-Feinschliff, Vision
 fastapi>=0.110.0           # API + Auslieferung des Dashboards

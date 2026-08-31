@@ -60,6 +60,12 @@ Der Punkte-Kreis links pulsiert nach der echten Lautstärke:
 
 ### Schritt 1 – Python-Pakete installieren
 
+> **Du brauchst Python 3.10 oder neuer.** Prüfen mit `python3 --version`.
+> macOS bringt ab Werk nur **3.9** mit – damit läuft es nicht. Dann:
+> `brew install python@3.12` und die venv mit
+> `$(brew --prefix)/bin/python3.12 -m venv .venv` anlegen.
+> JARVIS sagt es dir beim Start, falls die Version nicht reicht.
+
 ```bash
 cd jarvis-local
 python3 -m venv .venv
@@ -285,6 +291,8 @@ Willst du ihn geschwätziger, stell auf 6. Für die Bildschirm-Analyse gilt das 
 | Klatschen löst nichts aus | `python3 ClapTrigger.py --calibrate`, Wert eintragen. Mikrofon wählen: `--list-devices` |
 | Klatschen löst dauernd aus | `clap_trigger.threshold` erhöhen |
 | Fenster werden nicht angeordnet | macOS: Systemeinstellungen → Datenschutz → **Bedienungshilfen** → Terminal erlauben. Windows: `pip install pywin32`. Linux: `sudo apt install wmctrl` |
+| Ein Fenster landet falsch | Selten: eine App meldet sich unter anderem Prozessnamen. In `config.json` bei der App `"process_name": "Code"` ergänzen |
+| „JARVIS braucht Python 3.10“ | Deine venv nutzt macOS-Python 3.9. `rm -rf .venv`, dann mit `brew install python@3.12` neu anlegen |
 | Screenshot ist schwarz | macOS: Datenschutz → **Bildschirmaufnahme** → Terminal erlauben |
 | Stimme klingt nach Navi | ElevenLabs ist nicht konfiguriert – JARVIS nutzt die Systemstimme. Wizard Schritt 3 |
 | Mikrofon-Knopf ist ausgegraut | Seite läuft über `http`. Kein Browser-Problem – `https` einrichten (Tailscale) oder am Rechner über `localhost` öffnen |
