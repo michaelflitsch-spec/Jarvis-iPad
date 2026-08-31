@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="JARVIS">
+<meta name="theme-color" content="#02080c">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <title>JARVIS // Dashboard</title>
 <style>
 :root{
@@ -432,27 +435,67 @@ const orb = (() => {
 
 /* ============================ Audio-Ausgabe =========================== */
 const audio = (() => {
-  let context = null, element = null, source = null;
+  let context = null, element = null, source = null, unlocked = false;
+
+  // Ein Frame Stille als WAV. Damit wird das Audio-Element einmal "echt"
+  // abgespielt, waehrend der Nutzer klickt.
+  const SILENCE = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAI"
+                + "hYAQACABAAZGF0YQAAAAA=";
+
+  function build() {
+    if (element) return element;
+    const ac = ctx();
+    element = new Audio();
+    element.crossOrigin = "anonymous";
+    element.preload = "auto";
+    try {
+      source = ac.createMediaElementSource(element);
+      source.connect(ac.destination);
+      orb.attach(source);                   // Punkte reagieren auf die Stimme
+    } catch (e) {
+      // Ohne Web-Audio-Analyse spielt der Ton trotzdem, nur die Punkte
+      // pulsieren dann im Leerlauf.
+    }
+    return element;
+  }
+
+  function ctx() {
+    if (!context) context = new (window.AudioContext || window.webkitAudioContext)();
+    if (context.state === "suspended") context.resume();
+    return context;
+  }
+
   return {
-    ctx() {
-      if (!context) context = new (window.AudioContext || window.webkitAudioContext)();
-      if (context.state === "suspended") context.resume();
-      return context;
+    ctx,
+    /* MUSS synchron im Klick-Handler laufen.
+       iOS Safari erlaubt play() nur fuer Elemente, die schon einmal waehrend
+       einer Nutzeraktion gespielt haben. Nach dem ersten await ist die
+       Erlaubnis weg - deshalb hier, nicht spaeter. */
+    unlock() {
+      if (unlocked) return;
+      unlocked = true;
+      ctx();
+      const el = build();
+      el.src = SILENCE;
+      const played = el.play();
+      if (played && played.catch) played.catch(() => {});
+      if ("speechSynthesis" in window) {
+        // Gleiches Spiel fuer die Browser-Stimme als Rueckfallebene.
+        const primer = new SpeechSynthesisUtterance("");
+        primer.volume = 0;
+        try { speechSynthesis.speak(primer); } catch (e) {}
+      }
     },
     async playUrl(url) {                    // MP3 von /api/tts abspielen
-      const ac = this.ctx();
-      if (!element) {
-        element = new Audio();
-        element.crossOrigin = "anonymous";
-        source = ac.createMediaElementSource(element);
-        source.connect(ac.destination);
-        orb.attach(source);                 // Punkte reagieren auf die Stimme
+      const el = build();
+      el.src = url;
+      try {
+        await el.play();
+      } catch (e) {
+        log("Safari hat die Tonausgabe blockiert. Einmal ins Bild tippen.", "err");
+        return;
       }
-      element.src = url;
-      await element.play();
-      return new Promise(resolve => {
-        element.onended = element.onerror = resolve;
-      });
+      return new Promise(resolve => { el.onended = el.onerror = resolve; });
     },
     stop() { if (element) { element.pause(); element.currentTime = 0; } }
   };
@@ -819,7 +862,7 @@ async function boot() {
 $("gatebtn").onclick = () => {
   if (state.started) return;
   state.started = true;
-  audio.ctx();                     // AudioContext im Nutzer-Gesture entsperren
+  audio.unlock();                  // synchron im Gesture: entsperrt Ton auf iOS
   $("gate").classList.add("hidden");
   boot();
 };

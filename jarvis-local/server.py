@@ -14,6 +14,7 @@ from pathlib import Path
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from jarvis import config as config_module
@@ -40,8 +41,18 @@ goodnotes = GoodnotesExport(cfg)
 app = FastAPI(title="JARVIS", version="2.0.0", docs_url="/api/docs")
 app.add_middleware(
     CORSMiddleware,
-    # Lokaler Assistent: das Dashboard laeuft im Browser derselben Maschine.
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
+    # Loopback plus private Netze: das iPad greift ueber die LAN-IP zu.
+    # Oeffentliche Adressen bleiben aussen vor.
+    allow_origin_regex=(
+        r"^https?://("
+        r"localhost|127\.0\.0\.1|\[::1\]"
+        r"|10\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+        r"|192\.168\.\d{1,3}\.\d{1,3}"
+        r"|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}"
+        r"|100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\.\d{1,3}\.\d{1,3}"  # Tailscale
+        r"|[\w-]+\.local|[\w-]+\.ts\.net"
+        r")(:\d+)?$"
+    ),
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -76,6 +87,11 @@ def dashboard():
     if not DASHBOARD.exists():
         raise HTTPException(404, f"index.html nicht gefunden unter {DASHBOARD}")
     return FileResponse(DASHBOARD, headers={"Cache-Control": "no-store"})
+
+
+# Icons und Assets fuer "Zum Home-Bildschirm" auf dem iPad
+if (DASHBOARD.parent / "assets").is_dir():
+    app.mount("/assets", StaticFiles(directory=DASHBOARD.parent / "assets"), name="assets")
 
 
 @app.get("/api/status")
@@ -243,17 +259,74 @@ def refresh_notes():
     return vault.stats()
 
 
+def lan_addresses() -> list[str]:
+    """IPv4-Adressen, unter denen andere Geraete im WLAN den Server erreichen."""
+    import socket
+
+    found: list[str] = []
+    # Ein UDP-"Verbindungsaufbau" ohne Datenverkehr verraet die Adresse des
+    # Interfaces, ueber das dieser Rechner nach draussen routet.
+    for probe in ("8.8.8.8", "1.1.1.1"):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.settimeout(0.4)
+                sock.connect((probe, 80))
+                address = sock.getsockname()[0]
+                if address and not address.startswith("127.") and address not in found:
+                    found.append(address)
+                break
+        except OSError:
+            continue
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            address = info[4][0]
+            if not address.startswith("127.") and address not in found:
+                found.append(address)
+    except (OSError, socket.gaierror):
+        pass
+    return found
+
+
 def main() -> None:
+    import argparse
+
     import uvicorn
 
-    host = cfg.get("server.host", "127.0.0.1")
-    port = int(cfg.get("server.port", 8420))
-    print(f"JARVIS Dashboard:  http://{host}:{port}/")
-    print(f"API-Dokumentation: http://{host}:{port}/api/docs")
+    parser = argparse.ArgumentParser(description="JARVIS Server")
+    parser.add_argument("--lan", action="store_true",
+                        help="auch fuer iPad und andere Geraete im WLAN erreichbar machen")
+    parser.add_argument("--host", help="Bind-Adresse ueberschreiben")
+    parser.add_argument("--port", type=int, help="Port ueberschreiben")
+    args = parser.parse_args()
+
+    port = args.port or int(cfg.get("server.port", 8420))
+    host = args.host or ("0.0.0.0" if args.lan else cfg.get("server.host", "127.0.0.1"))
+    open_to_network = host in {"0.0.0.0", "::"}
+
+    print(f"\nJARVIS Dashboard:  http://127.0.0.1:{port}/")
+    print(f"API-Dokumentation: http://127.0.0.1:{port}/api/docs")
+
+    if open_to_network:
+        addresses = lan_addresses()
+        if addresses:
+            print("\n  Auf dem iPad im selben WLAN oeffnen:")
+            for address in addresses:
+                print(f"    http://{address}:{port}/")
+        else:
+            print("\n  Keine LAN-Adresse gefunden. WLAN verbunden?")
+        print(
+            "\n  ACHTUNG: In diesem Modus kann jedes Geraet im Netz deine Notizen\n"
+            "  lesen und Bildschirmfotos ausloesen. Nur im eigenen WLAN benutzen,\n"
+            "  nie in oeffentlichen Netzen. Beenden mit Strg+C.\n"
+            "\n  Hinweis: Ueber http (statt https) sperrt Safari Mikrofon und\n"
+            "  Spracherkennung. Texteingabe und Sprachausgabe funktionieren."
+        )
+
     if not vault.available:
         print("Hinweis: Notizverzeichnis ist nicht gesetzt -> python3 setup_wizard.py")
     if not brain.available:
         print("Hinweis: Anthropic API-Key fehlt -> python3 setup_wizard.py")
+    print()
     uvicorn.run(app, host=host, port=port, log_level="warning")
 
 

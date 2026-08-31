@@ -124,7 +124,9 @@ python3 server.py
 
 Dann im Browser: **http://127.0.0.1:8420/**
 
-Einmal auf **SYSTEM STARTEN** klicken. Damit beginnt die Musik mit Ton, das Audio-Briefing
+Einmal auf **SYSTEM STARTEN** klicken.
+
+> Auf dem iPad statt am Mac testen? Siehe [Auf dem iPad benutzen](#auf-dem-ipad-benutzen). Damit beginnt die Musik mit Ton, das Audio-Briefing
 läuft los und das Mikrofon wird freigegeben.
 
 > **Warum dieser Klick nötig ist:** Chrome, Safari und Firefox blockieren Ton, der ohne
@@ -285,6 +287,89 @@ Willst du ihn geschwätziger, stell auf 6. Für die Bildschirm-Analyse gilt das 
 
 Status jederzeit prüfen: **http://127.0.0.1:8420/api/status**
 Alle Endpunkte ausprobieren: **http://127.0.0.1:8420/api/docs**
+
+---
+
+## Auf dem iPad benutzen
+
+Der Python-Teil läuft **nicht** auf dem iPad – iPadOS lässt keine dauerhaften
+Hintergrundserver zu. Das Prinzip ist deshalb:
+
+> **Der Mac ist das Gehirn, das iPad ist der Bildschirm.**
+
+Beide müssen im selben WLAN sein.
+
+### Am Mac
+
+```bash
+cd jarvis-local
+source .venv/bin/activate
+python3 server.py --lan
+```
+
+Der Server zeigt dir die Adresse, die du am iPad eintippen musst:
+
+```
+  Auf dem iPad im selben WLAN oeffnen:
+    http://192.168.1.42:8420/
+```
+
+### Am iPad
+
+Adresse in Safari eingeben → **SYSTEM STARTEN** tippen.
+
+Danach: Teilen-Symbol → **Zum Home-Bildschirm**. JARVIS bekommt ein eigenes Icon
+und startet ohne Safari-Leiste im Vollbild.
+
+### Was auf dem iPad geht – und was nicht
+
+| Funktion | Über WLAN (http) | Anmerkung |
+|---|---|---|
+| Dashboard, To-dos, Stundenplan, Termine | ✅ | aktualisiert sich jede Minute |
+| Audio-Briefing und Antworten (ElevenLabs) | ✅ | |
+| Chat per Texteingabe | ✅ | |
+| Musik | ⚠️ | iOS verbietet Autoplay mit Ton in eingebetteten Videos. Einmal auf Play tippen |
+| Mikrofon-Animation | ❌ | braucht https |
+| Spracherkennung | ❌ | braucht https |
+| Klatsch-Trigger | ➡️ | läuft am Mac, du klatschst dort |
+| Apps starten und anordnen | ➡️ | passiert am Mac, nicht am iPad |
+| Bildschirm-Analyse | ⚠️ | analysiert den **Mac**-Bildschirm, nicht den des iPads |
+
+**Warum Mikrofon und Spracherkennung fehlen:** Safari gibt beides nur in einem
+„sicheren Kontext" frei – also über `https`. `localhost` ist ausgenommen, eine
+LAN-Adresse wie `192.168.1.42` nicht. Das ist eine Sicherheitsregel des Browsers,
+kein Fehler in der Einrichtung. Fürs Ausprobieren reicht die Texteingabe;
+JARVIS antwortet trotzdem mit Stimme.
+
+### Mit https – dann geht auch das Mikrofon
+
+Der bequemste Weg ist [Tailscale](https://tailscale.com) (kostenlos für private Nutzung).
+Es verbindet Mac und iPad über ein privates Netz und liefert ein gültiges Zertifikat mit:
+
+```bash
+# einmalig auf beiden Geräten installieren und anmelden, dann am Mac:
+tailscale serve --bg 8420
+tailscale serve status        # zeigt dir die https-Adresse
+```
+
+Die angezeigte `https://…​.ts.net`-Adresse am iPad öffnen. Damit funktionieren
+Mikrofon und Spracherkennung – und es klappt auch **außerhalb** des heimischen WLAN,
+etwa aus der Schule.
+
+### Sicherheit
+
+`--lan` öffnet den Server für **jedes** Gerät im Netz. Wer die Adresse kennt, kann
+deine Notizen lesen und Bildschirmfotos deines Macs auslösen.
+
+- Nur im eigenen WLAN benutzen, **nie** im Schul- oder Café-Netz.
+- Ohne `--lan` lauscht der Server wie bisher nur lokal.
+- Sicherer als `--lan` ist Tailscale: dort erreichen dich nur deine eigenen Geräte.
+
+### Bekannte Einschränkung: Bildschirm-Analyse
+
+„MATHE LÖSEN" fotografiert den Bildschirm des **Macs**. Wenn deine Aufgabe auf dem
+iPad liegt – etwa in Goodnotes – sieht JARVIS sie nicht. Bisher gibt es keinen Weg,
+ein Foto vom iPad hochzuladen; das wäre ein eigener Endpunkt.
 
 ---
 
