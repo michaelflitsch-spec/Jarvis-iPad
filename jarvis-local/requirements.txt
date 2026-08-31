@@ -1,0 +1,16 @@
+# --- Kern (zwingend) ---
+anthropic>=0.40.0          # Claude: Chat, Briefing-Feinschliff, Vision
+fastapi>=0.110.0           # API + Auslieferung des Dashboards
+uvicorn[standard]>=0.27.0  # Server
+pydantic>=2.6.0            # Validierung der Request-Bodies
+
+# --- Bildschirm-Analyse (Claude Vision) ---
+mss>=9.0.1                 # schneller Screenshot, plattformuebergreifend
+pillow>=10.2.0             # Bild skalieren und als PNG kodieren
+
+# --- Klatsch-Trigger ---
+sounddevice>=0.4.6         # Mikrofon-Stream (braucht PortAudio, siehe README)
+numpy>=1.26.0              # Pegel-Analyse
+
+# --- Optional ---
+# pywin32>=306             # nur Windows: Fenster exakt positionieren

@@ -1,7 +1,20 @@
+# --- Secrets: enthalten API-Keys, gehoeren nie ins Repo ---
 server/.env
+jarvis-local/config.json
+
+# --- Laufzeit-Artefakte ---
 server/data/
 server/node_modules/
 node_modules/
+jarvis-local/.venv/
+jarvis-local/venv/
+jarvis-local/export/
+jarvis-local/screenshots/
+jarvis-local/__pycache__/
+jarvis-local/**/__pycache__/
+*.py[cod]
+
+# --- Sonstiges ---
 assets/boot-intro.*
 .DS_Store
 *.swp

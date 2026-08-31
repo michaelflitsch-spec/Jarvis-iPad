@@ -1,0 +1,224 @@
+{
+  "_comment": "JARVIS Konfiguration. Kopiere diese Datei nach config.json (setup_wizard.py macht das fuer dich). config.json ist gitignored und enthaelt deine echten Keys.",
+  "identity": {
+    "owner_name": "Michael",
+    "address_as": "Sir",
+    "language": "de",
+    "timezone": "Europe/Vienna"
+  },
+  "personality": {
+    "system_prompt": "Du bist J.A.R.V.I.S., der persoenliche Assistent von {owner_name}. Du sprichst ihn ausschliesslich mit \"{address_as}\" an.\n\nCharakter:\n- Hochintelligent, vornehm, absolut effizient.\n- Trocken sarkastisch, aber nie respektlos. Ein feiner Seitenhieb pro Antwort reicht.\n- Motivierend wie ein guter Trainer: konkret, nie Kalenderspruch.\n- Du beschoenigst nichts. Wenn etwas schlecht laeuft, sagst du es.\n\nSprachausgabe (wichtig, deine Antworten werden vorgelesen):\n- Maximal {max_sentences} kurze Saetze. Ein Gedanke pro Satz.\n- Keine Schachtelsaetze, keine Nebensatzketten, keine Klammern.\n- Keine Aufzaehlungszeichen, kein Markdown, keine Emojis, keine Ueberschriften.\n- Zahlen ausschreiben wenn sie gesprochen komisch klingen. Uhrzeit als \"acht Uhr dreissig\".\n- Keine Abkuerzungen die man buchstabieren muesste. Schreibe \"zum Beispiel\" statt \"z. B.\".\n- Beginne nie mit \"Natuerlich\", \"Gerne\" oder \"Klar\". Antworte direkt.\n\nBei Mathe- oder Code-Fragen darfst du laenger werden, aber gliedere in nummerierte Schritte und halte jeden Schritt auf einen Satz.",
+    "max_sentences": 4,
+    "greeting": "Systeme hochgefahren, {address_as}. Ich habe mir erlaubt, den Tag bereits fuer Sie durchzusehen."
+  },
+  "api": {
+    "anthropic": {
+      "api_key": "",
+      "chat_model": "claude-haiku-4-5",
+      "vision_model": "claude-opus-5",
+      "max_tokens_voice": 600,
+      "max_tokens_vision": 4000
+    },
+    "elevenlabs": {
+      "api_key": "",
+      "voice_id": "pNInz6obpgDQGcFmaJgB",
+      "model_id": "eleven_multilingual_v2",
+      "stability": 0.45,
+      "similarity_boost": 0.8,
+      "style": 0.15,
+      "speed": 1.0,
+      "enabled": true
+    }
+  },
+  "paths": {
+    "notes_vault": "",
+    "school_subdir": "Schule",
+    "training_subdir": "Training",
+    "goodnotes_export": "",
+    "project_dir": ""
+  },
+  "notes": {
+    "timetable_file": "Stundenplan.md",
+    "homework_file": "Hausaufgaben.md",
+    "exams_file": "Pruefungen.md",
+    "training_file": "Trainingsplan.md",
+    "scan_all_markdown": true,
+    "max_files": 400,
+    "ignore_dirs": [
+      "Goodnotes",
+      "JARVIS-Export",
+      "export",
+      "Vorlagen",
+      "templates",
+      "Archiv",
+      "attachments"
+    ]
+  },
+  "location": {
+    "name": "Wien",
+    "latitude": 48.2082,
+    "longitude": 16.3738
+  },
+  "training": {
+    "sport": "Fussball",
+    "plan": {
+      "monday": {
+        "type": "kraft",
+        "title": "Krafttraining Unterkoerper",
+        "detail": "Kniebeugen, Ausfallschritte, Waden, Rumpf. 4 Saetze, 8 bis 12 Wiederholungen.",
+        "equipment": [
+          "Trainingsschuhe",
+          "Handtuch",
+          "Trinkflasche"
+        ],
+        "outdoor": false
+      },
+      "tuesday": {
+        "type": "mannschaft",
+        "title": "Mannschaftstraining",
+        "detail": "Technik, Passspiel, Abschluss. Voller Einsatz.",
+        "equipment": [
+          "Fussballschuhe",
+          "Schienbeinschoner",
+          "Stutzen",
+          "Trinkflasche"
+        ],
+        "outdoor": true
+      },
+      "wednesday": {
+        "type": "intervall",
+        "title": "Lauf-Intervalltraining",
+        "detail": "15 Minuten einlaufen. Dann 6 mal 400 Meter zuegig, 90 Sekunden Trabpause. 10 Minuten auslaufen.",
+        "equipment": [
+          "Laufschuhe",
+          "Pulsuhr",
+          "Trinkflasche"
+        ],
+        "outdoor": true
+      },
+      "thursday": {
+        "type": "mannschaft",
+        "title": "Mannschaftstraining",
+        "detail": "Taktik und Spielformen.",
+        "equipment": [
+          "Fussballschuhe",
+          "Schienbeinschoner",
+          "Stutzen",
+          "Trinkflasche"
+        ],
+        "outdoor": true
+      },
+      "friday": {
+        "type": "kraft",
+        "title": "Krafttraining Oberkoerper und Core",
+        "detail": "Klimmzuege, Bankdruecken, Rudern, Planks. Sauber ausfuehren.",
+        "equipment": [
+          "Trainingsschuhe",
+          "Handtuch"
+        ],
+        "outdoor": false
+      },
+      "saturday": {
+        "type": "spiel",
+        "title": "Matchtag",
+        "detail": "Spieltag. Zwei Stunden vorher letzte Mahlzeit. Fokus.",
+        "equipment": [
+          "Fussballschuhe",
+          "Schienbeinschoner",
+          "Stutzen",
+          "Trikot",
+          "Tape",
+          "Trinkflasche"
+        ],
+        "outdoor": true
+      },
+      "sunday": {
+        "type": "regeneration",
+        "title": "Regeneration",
+        "detail": "Lockeres Ausrollen, Dehnen, 20 Minuten Spaziergang. Schlaf ist Teil des Trainings.",
+        "equipment": [
+          "Faszienrolle"
+        ],
+        "outdoor": false
+      }
+    },
+    "override_from_notes": true
+  },
+  "morning_routine": {
+    "enabled": true,
+    "speak_briefing": true,
+    "apps": [
+      {
+        "name": "Obsidian",
+        "macos": "Obsidian",
+        "windows": "obsidian",
+        "linux": "obsidian",
+        "position": "top-right",
+        "enabled": true
+      },
+      {
+        "name": "Editor",
+        "macos": "Visual Studio Code",
+        "windows": "code",
+        "linux": "code",
+        "position": "left",
+        "enabled": true,
+        "open_project": true
+      },
+      {
+        "name": "JARVIS",
+        "macos": "Google Chrome",
+        "windows": "chrome",
+        "linux": "google-chrome",
+        "position": "fullscreen",
+        "enabled": true,
+        "open_url": "http://localhost:8420/"
+      },
+      {
+        "name": "Spotify",
+        "macos": "Spotify",
+        "windows": "spotify",
+        "linux": "spotify",
+        "position": "bottom-right",
+        "enabled": false
+      }
+    ],
+    "music": {
+      "provider": "youtube",
+      "youtube_video_id": "pAgnJDJN4VA",
+      "youtube_title": "AC/DC - Back In Black",
+      "spotify_uri": "",
+      "volume": 0.7,
+      "autoplay_in_dashboard": true
+    }
+  },
+  "clap_trigger": {
+    "enabled": true,
+    "input_device": null,
+    "samplerate": 44100,
+    "blocksize": 1024,
+    "threshold": 0.28,
+    "min_gap_seconds": 0.12,
+    "max_gap_seconds": 0.75,
+    "cooldown_seconds": 12.0,
+    "required_claps": 2,
+    "calibrate_on_start": true
+  },
+  "vision": {
+    "enabled": true,
+    "monitor": 1,
+    "max_width": 1600,
+    "save_screenshots": false,
+    "screenshot_dir": ""
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8420,
+    "open_browser_on_start": false
+  },
+  "dashboard": {
+    "show_seconds": true,
+    "todo_limit": 12,
+    "exam_horizon_days": 21
+  }
+}
