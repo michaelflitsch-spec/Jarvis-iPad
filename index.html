@@ -81,6 +81,7 @@ button:active{transform:translateY(1px)}
 button.hot{border-color:var(--c);color:#dff;background:rgba(41,243,255,.14)}
 button.mic{font-size:13px;padding:5px 11px}
 button.mic.live{background:var(--bad);border-color:var(--bad);color:#fff;animation:pulse 1.1s infinite}
+button.mic.blocked{opacity:.4}
 @keyframes pulse{50%{opacity:.55}}
 
 /* ---------- Rechts oben: Notizen ---------- */
@@ -557,9 +558,28 @@ async function speak(text) {
 
 /* ========================== Spracherkennung ========================== */
 let recognition = null;
+
+/* Mikrofon und Spracherkennung verlangen einen "sicheren Kontext" - also https
+   oder localhost. Das ist eine Regel des Web-Standards, nicht eine Eigenheit
+   von Safari: Chrome, Firefox und Edge verhalten sich genauso. Ein anderer
+   Browser hilft deshalb nicht, eine andere Adresse schon. */
+function micBlockedReason() {
+  if (window.isSecureContext === false) {
+    return `Das Mikrofon ist gesperrt, weil die Seite über http läuft (${location.host}). `
+         + `Das liegt an der Adresse, nicht am Browser – ein anderer Browser ändert nichts. `
+         + `Abhilfe: https einrichten (Tailscale, siehe README) oder am Rechner selbst `
+         + `über localhost öffnen. Tippen funktioniert hier weiterhin.`;
+  }
+  if (!(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+    return "Dieser Browser kennt keine Spracherkennung. Tippen funktioniert weiterhin.";
+  }
+  return null;
+}
+
 function toggleMic() {
+  const blocked = micBlockedReason();
+  if (blocked) { log(blocked, "err"); return; }
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { log("Spracherkennung braucht Chrome, Edge oder Safari.", "err"); return; }
   if (state.listening) { recognition?.stop(); return; }
 
   recognition = new SR();
@@ -597,6 +617,8 @@ function toggleMic() {
 /* Mikrofon-Pegel fuer die Punkte-Animation (getrennt von der Erkennung) */
 let micTrack = null;
 async function micStream() {
+  // navigator.mediaDevices existiert im unsicheren Kontext ueberhaupt nicht
+  if (!navigator.mediaDevices?.getUserMedia) return;
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
     micTrack = stream;
@@ -902,7 +924,16 @@ async function refresh() {
   } catch (e) { /* naechster Durchlauf versucht es erneut */ }
 }
 
+function markMicAvailability() {
+  const reason = micBlockedReason();
+  const button = $("micbtn");
+  if (!reason) return;
+  button.classList.add("blocked");
+  button.title = reason;
+}
+
 async function boot() {
+  markMicAvailability();
   const status = await connect();
 
   if (!state.online) {

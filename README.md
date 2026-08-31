@@ -287,6 +287,7 @@ Willst du ihn geschwätziger, stell auf 6. Für die Bildschirm-Analyse gilt das 
 | Fenster werden nicht angeordnet | macOS: Systemeinstellungen → Datenschutz → **Bedienungshilfen** → Terminal erlauben. Windows: `pip install pywin32`. Linux: `sudo apt install wmctrl` |
 | Screenshot ist schwarz | macOS: Datenschutz → **Bildschirmaufnahme** → Terminal erlauben |
 | Stimme klingt nach Navi | ElevenLabs ist nicht konfiguriert – JARVIS nutzt die Systemstimme. Wizard Schritt 3 |
+| Mikrofon-Knopf ist ausgegraut | Seite läuft über `http`. Kein Browser-Problem – `https` einrichten (Tailscale) oder am Rechner über `localhost` öffnen |
 | Kein Wetter | Open-Meteo nicht erreichbar. Kein Key nötig, aber Internet |
 
 Status jederzeit prüfen: **http://127.0.0.1:8420/api/status**
@@ -416,17 +417,23 @@ und startet ohne Safari-Leiste im Vollbild.
 | Audio-Briefing und Antworten (ElevenLabs) | ✅ | |
 | Chat per Texteingabe | ✅ | |
 | Musik | ⚠️ | iOS verbietet Autoplay mit Ton in eingebetteten Videos. Einmal auf Play tippen |
-| Mikrofon-Animation | ❌ | braucht https |
-| Spracherkennung | ❌ | braucht https |
+| Mikrofon-Animation | ❌ | braucht https – ein anderer Browser hilft nicht |
+| Spracherkennung | ❌ | braucht https – ein anderer Browser hilft nicht |
 | Klatsch-Trigger | ➡️ | läuft am Mac, du klatschst dort |
 | Apps starten und anordnen | ➡️ | passiert am Mac, nicht am iPad |
 | Bildschirm-Analyse | ⚠️ | analysiert den **Mac**-Bildschirm, nicht den des iPads |
 
-**Warum Mikrofon und Spracherkennung fehlen:** Safari gibt beides nur in einem
-„sicheren Kontext" frei – also über `https`. `localhost` ist ausgenommen, eine
-LAN-Adresse wie `192.168.1.42` nicht. Das ist eine Sicherheitsregel des Browsers,
-kein Fehler in der Einrichtung. Fürs Ausprobieren reicht die Texteingabe;
-JARVIS antwortet trotzdem mit Stimme.
+**Warum Mikrofon und Spracherkennung fehlen:** Browser geben beides nur in
+einem „sicheren Kontext" frei – also über `https`. `localhost` ist ausgenommen,
+eine LAN-Adresse wie `192.168.1.42` nicht. Fürs Ausprobieren reicht die
+Texteingabe; JARVIS antwortet trotzdem mit Stimme.
+
+> **Hilft ein anderer Browser? Nein.** Der sichere Kontext ist eine Regel des
+> Web-Standards, keine Eigenheit von Safari – Chrome, Firefox und Edge sperren
+> das Mikrofon über `http` genauso. Dazu kommt: Auf iPhone und iPad benutzen
+> alle Browser dieselbe Engine wie Safari (WebKit); Chrome ist dort im Kern
+> Safari mit anderer Oberfläche. Es liegt an der **Adresse**, nicht am Browser.
+> Die Lösung ist deshalb `https`, siehe unten.
 
 ### Mit https – dann geht auch das Mikrofon
 
