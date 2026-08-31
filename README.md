@@ -11,6 +11,8 @@ Dashboard im Browser, Gehirn von Claude, Stimme von ElevenLabs, Daten aus deinem
 |---|---|
 | **Morgen-Routine** | Doppelklatschen startet Obsidian, VS Code (Projekt Kickplan), Chrome mit dem Dashboard und optional Spotify – und ordnet die Fenster an |
 | **Schule** | Liest Stundenplan, Hausaufgaben und Prüfungstermine aus deinen Markdown-Notizen |
+| **Kalender** | Echte Termine über die geheime iCal-Adresse, inklusive Serientermine |
+| **Notion** | To-dos aus deiner Aufgaben-Datenbank, zusammengeführt mit den Notizen |
 | **Bildschirm-Analyse** | Claude sieht deinen Bildschirm und löst Mathe-Aufgaben Schritt für Schritt oder erklärt JavaScript |
 | **Fußball** | Trainingsplan pro Wochentag, Wetter-Check und Packliste („Fußballschuhe einpacken") |
 | **Audio-Briefing** | Beim Start: Wetter + Kleidung, dann Schule, dann Sporteinheit |
@@ -86,7 +88,7 @@ pip install pywin32
 python3 setup_wizard.py
 ```
 
-Der Assistent führt dich durch **8 Schritte** und prüft jede Eingabe sofort gegen die echte API:
+Der Assistent führt dich durch **10 Schritte** und prüft jede Eingabe sofort gegen die echte API:
 
 | Schritt | Was du brauchst | Wo du es herbekommst |
 |---|---|---|
@@ -96,8 +98,10 @@ Der Assistent führt dich durch **8 Schritte** und prüft jede Eingabe sofort ge
 | 4 | **Pfad zum Notiz-Ordner** | dein Obsidian-Vault, z. B. `~/Documents/Obsidian/Michael` |
 | 5 | Deine Stadt | für Wetter und Kleidungsempfehlung |
 | 6 | **YouTube-Link** | für die Startmusik |
-| 7 | Welche Apps starten sollen | – |
-| 8 | Speichern | schreibt `config.json` mit Rechten 600 |
+| 7 | **iCal-Adresse** | Google Kalender → Einstellungen → *Geheime Adresse im iCal-Format* (optional) |
+| 8 | **Notion-Token + Datenbank** | notion.so/my-integrations (optional) |
+| 9 | Welche Apps starten sollen | – |
+| 10 | Speichern | schreibt `config.json` mit Rechten 600 |
 
 > Enter übernimmt jeweils den vorgeschlagenen Wert. Strg+C bricht ab, ohne etwas zu speichern.
 > API-Keys werden verdeckt eingegeben und landen **nur** in `config.json` – die ist in `.gitignore`.
@@ -287,6 +291,89 @@ Willst du ihn geschwätziger, stell auf 6. Für die Bildschirm-Analyse gilt das 
 
 Status jederzeit prüfen: **http://127.0.0.1:8420/api/status**
 Alle Endpunkte ausprobieren: **http://127.0.0.1:8420/api/docs**
+
+---
+
+## Kalender und Notion verbinden
+
+Beides ist optional. Ohne läuft JARVIS weiter mit den Terminen und Aufgaben
+aus deinen Markdown-Notizen.
+
+### Kalender (echte Termine)
+
+JARVIS liest deinen Kalender über die **geheime iCal-Adresse** – nur lesend,
+kein OAuth, kein Google-Cloud-Projekt. Eine Adresse zum Kopieren.
+
+**Google Kalender:** calendar.google.com → Zahnrad → Einstellungen → links
+deinen Kalender anklicken → ganz unten *Geheime Adresse im iCal-Format*.
+
+**Apple Kalender:** Rechtsklick auf den Kalender → Freigeben → *Öffentlicher
+Kalender* → Adresse kopieren. `webcal://` wird automatisch umgesetzt.
+
+**Schulkalender:** Viele Schulen und Vertretungsplan-Apps bieten einen
+ICS-Export an. Der funktioniert genauso – im Wizard kannst du eine zweite
+Adresse hinterlegen.
+
+> ⚠️ **Diese Adresse ist wie ein Passwort.** Wer sie hat, sieht alle deine
+> Termine – ohne Anmeldung. Nicht weitergeben, nicht committen. Falls sie doch
+> mal irgendwo landet: in Google Kalender an derselben Stelle *Zurücksetzen*.
+
+Wiederholungen werden korrekt aufgelöst: Ein wöchentlicher Termin steht in der
+Datei nur einmal drin, JARVIS rechnet die Folgetermine aus. Abgesagte
+Einzeltermine einer Serie verschwinden, verschobene erscheinen am neuen Datum.
+
+Termine, die nur Platz kosten, kannst du ausblenden – standardmäßig
+*Aufstehen*, *Wecker*, *Schlafen*. Änderbar unter `calendar.skip_titles`.
+
+### Notion (To-dos)
+
+1. **Integration anlegen:** [notion.so/my-integrations](https://www.notion.so/my-integrations)
+   → *New integration* → Typ *Internal* → das **Internal Integration Secret** kopieren.
+2. **Datenbank freigeben:** In Notion deine Aufgaben-Datenbank öffnen →
+   oben rechts **···** → *Verbindungen* → deine Integration hinzufügen.
+   **Ohne diesen Schritt sieht die Integration nichts** – das ist der Fehler,
+   den praktisch jeder beim ersten Mal macht.
+3. **Link kopieren:** *Teilen* → *Link kopieren*. Der Wizard zieht sich die ID heraus.
+
+Die Spalten musst du nicht konfigurieren – JARVIS erkennt sie am Schema.
+Getestet mit Notions deutscher Aufgaben-Vorlage (`Aufgabenbezeichnung`,
+`Status`, `Fällig`) und der englischen (`Name`, `Done`, `Due date`).
+Erledigtes wird ausgeblendet, egal ob über *Status* oder eine Checkbox.
+
+### Wie die To-dos zusammengeführt werden
+
+Aufgaben aus Obsidian und Notion landen in **einer** Liste, sortiert nach
+Dringlichkeit: überfällig zuerst, dann nach Fälligkeit. Ein Abzeichen zeigt,
+woher jede Aufgabe kommt; Notion-Einträge sind anklickbar.
+
+Steht dieselbe Aufgabe in beiden Systemen, erscheint sie **einmal**. JARVIS
+erkennt das auch, wenn eine Seite ausführlicher ist – „Mathe Seite 42" und
+„Mathe Seite 42 Wahrscheinlichkeitsrechnung" gelten als dieselbe Aufgabe.
+Behalten wird der längere Text, ein Fälligkeitsdatum wird von der anderen
+Seite übernommen, falls es dort steht.
+
+Unter der Liste steht, wie viele Aufgaben aus welcher Quelle kommen. Klemmt
+Notion – Token abgelaufen, Netz weg – erscheint dort der Grund, und die
+Obsidian-Aufgaben bleiben trotzdem sichtbar.
+
+### Neue Endpunkte
+
+| Endpunkt | Zweck |
+|---|---|
+| `/api/calendar?days=14` | anstehende Termine |
+| `/api/notion/tasks` | offene Notion-Aufgaben |
+| `/api/notion/check` | Verbindung testen, erkannte Spalten anzeigen |
+
+### Wenn etwas nicht geht
+
+| Problem | Lösung |
+|---|---|
+| „Datenbank nicht gefunden" | Schritt 2 vergessen: Datenbank über ··· → Verbindungen mit der Integration teilen |
+| „Notion lehnt das Token ab" | Token neu erzeugen unter notion.so/my-integrations |
+| Kalender liefert HTTP 404 | Geheime Adresse wurde zurückgesetzt – neu kopieren |
+| „Die Adresse liefert keinen Kalender" | Es muss die iCal-Adresse sein (endet auf `.ics`), nicht der Link zur Web-Ansicht |
+| Serientermine fehlen | Prüfen, ob sie unter `calendar.skip_titles` fallen |
+| Termine um Stunden verschoben | `identity.timezone` in der `config.json` prüfen |
 
 ---
 

@@ -54,6 +54,32 @@
       "attachments"
     ]
   },
+  "calendar": {
+    "enabled": true,
+    "_hinweis": "Geheime iCal-Adresse. Google Kalender: Einstellungen > Kalender auswaehlen > 'Geheime Adresse im iCal-Format'. Apple: Kalender freigeben > Oeffentlicher Kalender. Diese Adresse ist ein Passwort.",
+    "sources": [
+      {
+        "name": "Privat",
+        "url": "",
+        "enabled": true
+      }
+    ],
+    "skip_titles": [
+      "Aufstehen",
+      "Wecker",
+      "Schlafen"
+    ],
+    "horizon_days": 14,
+    "show_in_briefing": true
+  },
+  "notion": {
+    "enabled": false,
+    "_hinweis": "Integration anlegen unter notion.so/my-integrations, dann die Datenbank in Notion ueber ··· > Verbindungen mit ihr teilen.",
+    "token": "",
+    "database_id": "",
+    "api_version": "2022-06-28",
+    "merge_with_notes": true
+  },
   "location": {
     "name": "Wien",
     "latitude": 48.2082,

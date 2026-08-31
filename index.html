@@ -101,6 +101,18 @@ button.mic.live{background:var(--bad);border-color:var(--bad);color:#fff;animati
 .row .m{flex:1;min-width:0}
 .row .tagline{display:block;font-size:8.5px;color:var(--dim);margin-top:2px}
 .row .room{color:var(--dim);font-size:9px}
+.badge{display:inline-block;font-size:7.5px;letter-spacing:.8px;padding:1px 5px;border-radius:2px;
+  margin-left:6px;vertical-align:1px;border:1px solid var(--line);color:var(--dim)}
+.badge.notion{border-color:#b8a6ff;color:#c9bcff}
+.badge.cal{border-color:var(--c2);color:var(--c2)}
+.daygroup{font-size:8px;letter-spacing:1.8px;color:var(--dim);margin:11px 0 5px;padding-bottom:3px;
+  border-bottom:1px dashed rgba(41,243,255,.18)}
+.daygroup:first-child{margin-top:0}
+.daygroup.today{color:var(--c2)}
+.srcnote{font-size:8.5px;color:var(--dim);margin-top:9px;padding-top:7px;
+  border-top:1px solid rgba(41,243,255,.14);line-height:1.5}
+.srcnote b{color:var(--c)}
+.srcerr{color:var(--warn)}
 .empty{font-size:10px;color:var(--dim);padding:14px 4px;line-height:1.6}
 .wx{display:flex;align-items:center;gap:12px;padding:9px 10px;margin-bottom:9px;
   border:1px solid var(--line);border-radius:4px;background:rgba(41,243,255,.04)}
@@ -203,6 +215,8 @@ button.mic.live{background:var(--bad);border-color:var(--bad);color:#fff;animati
         <span class="pill off" id="pClaude">CLAUDE</span>
         <span class="pill off" id="pVoice">VOICE</span>
         <span class="pill off" id="pNotes">NOTES</span>
+        <span class="pill off" id="pCal">KALENDER</span>
+        <span class="pill off" id="pNotion">NOTION</span>
       </div>
       <div><div class="clock" id="clock">--:--:--</div><div class="datestr" id="datestr">--</div></div>
     </div>
@@ -226,6 +240,7 @@ button.mic.live{background:var(--bad);border-color:var(--bad);color:#fff;animati
       <button onclick="askVision('mathe')">MATHE LÖSEN</button>
       <button onclick="askVision('code')">CODE ERKLÄREN</button>
       <button onclick="send('Was steht heute an?')">TAG</button>
+      <button onclick="send('Welche Termine habe ich diese Woche?')">TERMINE</button>
       <button onclick="send('Was muss ich fürs Training einpacken?')">TRAINING</button>
       <button onclick="exportToday()">EXPORT</button>
     </div>
@@ -236,7 +251,7 @@ button.mic.live{background:var(--bad);border-color:var(--bad);color:#fff;animati
     <div class="tabs">
       <button class="tab active" data-pane="todo">TO-DOS</button>
       <button class="tab" data-pane="plan">STUNDENPLAN</button>
-      <button class="tab" data-pane="term">TERMINE</button>
+      <button class="tab" data-pane="term">KALENDER</button>
       <button class="tab" data-pane="sport">TRAINING</button>
     </div>
     <div class="tabbody">
@@ -714,9 +729,10 @@ function renderNotes(data) {
   const clothing = data.clothing;
   const training = data.training || {};
 
-  /* --- To-dos --- */
+  /* --- To-dos: Obsidian und Notion gemischt --- */
   const todos = school.homework || [];
-  $("pane-todo").innerHTML = todos.length ? todos.map(task => {
+  const src = school.sources || {};
+  let todoHtml = todos.length ? todos.map(task => {
     const cls = task.overdue ? "badrow" : (task.days_left !== null && task.days_left <= 1 ? "warnrow" : "");
     const when = task.due
       ? (task.overdue ? "ÜBERFÄLLIG"
@@ -724,12 +740,28 @@ function renderNotes(data) {
         : task.days_left === 1 ? "MORGEN"
         : task.days_left + " TAGE")
       : "OFFEN";
-    return `<div class="row ${cls}">
-      <span class="t">${esc(when)}</span>
-      <span class="m">${esc(task.text)}<span class="tagline">${esc(task.source)}</span></span>
-    </div>`;
+    const isNotion = task.origin === "notion";
+    const badge = isNotion ? '<span class="badge notion">NOTION</span>' : "";
+    const label = isNotion && task.status ? task.status : task.source;
+    const body = `${esc(task.text)}${badge}<span class="tagline">${esc(label)}</span>`;
+    return task.url
+      ? `<div class="row ${cls}"><span class="t">${esc(when)}</span>
+           <span class="m"><a href="${esc(task.url)}" target="_blank" rel="noopener"
+             style="color:inherit;text-decoration:none">${body}</a></span></div>`
+      : `<div class="row ${cls}"><span class="t">${esc(when)}</span><span class="m">${body}</span></div>`;
   }).join("") : `<div class="empty">Keine offenen Aufgaben gefunden.<br><br>
       JARVIS liest Zeilen wie:<br><code>- [ ] Mathe: S. 42 (fällig: 2026-09-02)</code></div>`;
+
+  // Woher die Aufgaben kommen - und was gerade klemmt
+  const bits = [];
+  if (src.notes_count !== undefined) bits.push(`<b>${src.notes_count}</b> aus Obsidian`);
+  if (src.notion_available) bits.push(`<b>${src.notion_count || 0}</b> aus Notion`);
+  if (bits.length) {
+    todoHtml += `<div class="srcnote">${bits.join(" · ")}`
+      + (src.notion_error ? `<br><span class="srcerr">Notion: ${esc(src.notion_error)}</span>` : "")
+      + `</div>`;
+  }
+  $("pane-todo").innerHTML = todoHtml;
 
   /* --- Stundenplan --- */
   const lessons = school.lessons || [];
@@ -742,16 +774,58 @@ function renderNotes(data) {
      : `<div class="empty">Kein Unterricht für heute gefunden.<br><br>
         Format in <code>Stundenplan.md</code>:<br><code>## Montag</code><br><code>- 08:00 Mathematik (R204)</code></div>`);
 
-  /* --- Termine / Pruefungen --- */
+  /* --- Kalender: echte Termine, nach Tagen gruppiert, plus Prüfungen --- */
+  const cal = data.calendar || {};
   const exams = school.exams || [];
-  $("pane-term").innerHTML = exams.length ? exams.map(exam => {
-    const cls = exam.days_left <= 2 ? "badrow" : exam.days_left <= 7 ? "warnrow" : "";
-    return `<div class="row ${cls}">
-      <span class="t">${esc(exam.date_de.slice(0, 5))}</span>
-      <span class="m">${esc(exam.subject)}<span class="tagline">in ${exam.days_left} Tagen</span></span>
-    </div>`;
-  }).join("") : `<div class="empty">Keine Termine im Blick.<br><br>
-      Format: <code>- 2026-09-08 Mathematik Schularbeit</code></div>`;
+
+  // Prüfungen aus den Notizen als Termine mitführen
+  const merged = (cal.events || []).map(e => ({ ...e, kind: "cal" }));
+  const DAYS_DE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+  exams.forEach(exam => merged.push({
+    kind: "exam", summary: exam.subject, date: exam.date,
+    date_de: exam.date_de.slice(0, 5),
+    // Prüfungen kommen aus den Notizen ohne Wochentag - hier nachgerechnet,
+    // damit die Tagesüberschrift dieselbe Form hat wie bei Kalenderterminen.
+    weekday: DAYS_DE[new Date(exam.date + "T12:00:00").getDay()],
+    time: null, all_day: true, time_label: "Prüfung", location: "",
+    days_left: exam.days_left, is_today: exam.days_left === 0
+  }));
+  merged.sort((a, b) => a.date.localeCompare(b.date)
+    || (a.time || "00:00").localeCompare(b.time || "00:00"));
+
+  let termHtml = "";
+  if (merged.length) {
+    let lastDate = null;
+    merged.forEach(item => {
+      if (item.date !== lastDate) {
+        lastDate = item.date;
+        const head = item.days_left === 0 ? "HEUTE"
+                   : item.days_left === 1 ? "MORGEN"
+                   : `${item.weekday || ""} ${item.date_de}`.trim().toUpperCase();
+        termHtml += `<div class="daygroup ${item.is_today ? "today" : ""}">${esc(head)}</div>`;
+      }
+      const isExam = item.kind === "exam";
+      const cls = isExam ? (item.days_left <= 2 ? "badrow" : item.days_left <= 7 ? "warnrow" : "")
+                         : (item.is_today ? "warnrow" : "");
+      const place = item.location ? ` <span class="room">${esc(item.location)}</span>` : "";
+      const badge = isExam ? '<span class="badge">PRÜFUNG</span>'
+                           : (item.calendar ? `<span class="badge cal">${esc(item.calendar)}</span>` : "");
+      termHtml += `<div class="row ${cls}">
+        <span class="t">${esc(item.all_day ? (isExam ? "—" : "ganztg.") : item.time)}</span>
+        <span class="m">${esc(item.summary)}${place}${badge}</span></div>`;
+    });
+  } else if (cal.available) {
+    termHtml = `<div class="empty">Keine Termine in den nächsten Tagen.</div>`;
+  } else {
+    termHtml = `<div class="empty"><b>Kalender nicht verbunden.</b><br><br>
+      Google Kalender → Einstellungen → deinen Kalender wählen →
+      <i>Geheime Adresse im iCal-Format</i> kopieren, dann:<br>
+      <code>python3 setup_wizard.py</code></div>`;
+  }
+  if (cal.error) {
+    termHtml += `<div class="srcnote srcerr">${esc(cal.error)}</div>`;
+  }
+  $("pane-term").innerHTML = termHtml;
 
   /* --- Training + Wetter --- */
   let sport = "";
@@ -809,6 +883,8 @@ async function connect() {
     flag("pClaude", status.modules.anthropic);
     flag("pVoice", status.modules.elevenlabs);
     flag("pNotes", status.modules.notes);
+    flag("pCal", status.modules.calendar);
+    flag("pNotion", status.modules.notion);
     $("tagline").textContent = `VERBUNDEN · ${status.owner.toUpperCase()}`;
     return status;
   } catch (e) {

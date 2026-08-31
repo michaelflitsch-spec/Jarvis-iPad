@@ -35,7 +35,7 @@ C_OFF = "\033[0m"
 if os.name == "nt" and not os.environ.get("WT_SESSION"):
     C_BOLD = C_CYAN = C_GREEN = C_RED = C_YELLOW = C_DIM = C_OFF = ""
 
-TOTAL_STEPS = 8
+TOTAL_STEPS = 10
 
 
 def header(step: int, title: str) -> None:
@@ -171,6 +171,52 @@ def check_elevenlabs(key: str) -> tuple[bool, str, list]:
         return False, f"HTTP {exc.code}", []
     except Exception as exc:
         return False, f"Nicht erreichbar: {str(exc)[:80]}", []
+
+
+def check_calendar(url: str) -> tuple[bool, str]:
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT))
+    from jarvis.calendar import CalendarError, CalendarService
+
+    class _Cfg:
+        timezone = "Europe/Berlin"
+        def get(self, key, default=None):
+            return {
+                "calendar.enabled": True,
+                "calendar.sources": [{"name": "Test", "url": url, "enabled": True}],
+                "calendar.skip_titles": [],
+            }.get(key, default)
+
+    service = CalendarService(_Cfg())
+    try:
+        events = service.upcoming(30)
+    except CalendarError as exc:
+        return False, str(exc)
+    if not events:
+        return True, "Verbunden, aber in den naechsten 30 Tagen steht nichts drin"
+    preview = ", ".join(e["summary"][:28] for e in events[:3])
+    return True, f"{len(events)} Termine gefunden: {preview}"
+
+
+def check_notion(token: str, database_id: str) -> tuple[bool, str, dict]:
+    import sys as _sys
+    _sys.path.insert(0, str(ROOT))
+    from jarvis.notion import NotionError, NotionTasks
+
+    class _Cfg:
+        def get(self, key, default=None):
+            return {
+                "notion.enabled": True,
+                "notion.token": token,
+                "notion.database_id": database_id,
+                "notion.api_version": "2022-06-28",
+            }.get(key, default)
+
+    try:
+        result = NotionTasks(_Cfg()).check()
+    except NotionError as exc:
+        return False, str(exc), {}
+    return True, f"Datenbank \"{result['database']}\", {result['open_tasks']} offene Aufgaben", result
 
 
 def geocode(place: str) -> tuple[float, float, str] | None:
@@ -355,8 +401,83 @@ API-Keys werden verdeckt eingegeben.
                 app["enabled"] = True
         ok("Spotify wird in der Morgen-Routine mitgestartet.")
 
-    # ---- 7: Apps ----
-    header(7, "Morgen-Routine: welche Apps sollen starten")
+    # ---- 7: Kalender ----
+    header(7, "Kalender (echte Termine im Dashboard)")
+    info("JARVIS liest deinen Kalender ueber die geheime iCal-Adresse - nur lesend.")
+    info("Google:  calendar.google.com > Zahnrad > Einstellungen > links deinen")
+    info("         Kalender waehlen > ganz unten 'Geheime Adresse im iCal-Format'.")
+    info("Apple:   Kalender > Rechtsklick auf den Kalender > Freigeben >")
+    info("         Oeffentlicher Kalender > Adresse kopieren (webcal://... geht auch).")
+    warn("Diese Adresse ist wie ein Passwort. Wer sie hat, sieht alle deine Termine.")
+
+    sources = _get(data, "calendar.sources", []) or []
+    current_url = sources[0].get("url", "") if sources else ""
+    url = ask_optional("iCal-Adresse (Enter = ueberspringen)", current_url)
+    if url:
+        print("  Teste die Adresse …")
+        good, message = check_calendar(url)
+        (ok if good else fail)(message)
+        if good or confirm("Trotzdem speichern?", default=False):
+            name = ask_optional("Name fuer diesen Kalender", 
+                                sources[0].get("name", "Privat") if sources else "Privat")
+            _set(data, "calendar.sources", [{"name": name, "url": url, "enabled": True}])
+            _set(data, "calendar.enabled", True)
+
+            extra = ask_optional("Noch eine Adresse, z. B. Schulkalender (Enter = nein)", "")
+            if extra:
+                good2, message2 = check_calendar(extra)
+                (ok if good2 else fail)(message2)
+                if good2:
+                    label = ask_optional("Name fuer diesen zweiten Kalender", "Schule")
+                    current = _get(data, "calendar.sources", [])
+                    current.append({"name": label, "url": extra, "enabled": True})
+                    _set(data, "calendar.sources", current)
+
+            skip = ask_optional(
+                "Termine ausblenden, die diese Woerter enthalten (Komma-getrennt)",
+                ", ".join(_get(data, "calendar.skip_titles", []) or []))
+            _set(data, "calendar.skip_titles",
+                 [w.strip() for w in skip.split(",") if w.strip()])
+    else:
+        _set(data, "calendar.enabled", False)
+        info("Uebersprungen. Termine kommen dann nur aus deinen Notizen.")
+
+    # ---- 8: Notion ----
+    header(8, "Notion (To-dos aus deiner Aufgaben-Datenbank)")
+    info("1. Oeffne notion.so/my-integrations und klicke 'New integration'.")
+    info("2. Name egal, Typ 'Internal'. Das 'Internal Integration Secret' kopieren.")
+    info("3. In Notion deine Aufgaben-Datenbank oeffnen, oben rechts ··· >")
+    info("   Verbindungen > deine Integration hinzufuegen. Ohne das sieht sie nichts.")
+    info("4. Dann den Link der Datenbank kopieren (Teilen > Link kopieren).")
+
+    token = ask_optional("Notion-Token (Enter = ueberspringen)",
+                         _get(data, "notion.token"), secret=True)
+    if token:
+        while True:
+            database = ask("Link oder ID der Aufgaben-Datenbank",
+                           _get(data, "notion.database_id"))
+            print("  Teste die Verbindung …")
+            good, message, result = check_notion(token, database)
+            (ok if good else fail)(message)
+            if good:
+                columns = {k: v for k, v in result.get("columns", {}).items() if v}
+                info(f"Erkannte Spalten: {columns}")
+                if result.get("sample"):
+                    for entry in result["sample"]:
+                        info(f"  · {entry}")
+                _set(data, "notion.token", token)
+                _set(data, "notion.database_id", database)
+                _set(data, "notion.enabled", True)
+                break
+            if not confirm("Nochmal versuchen?", default=True):
+                _set(data, "notion.enabled", False)
+                break
+    else:
+        _set(data, "notion.enabled", False)
+        info("Uebersprungen. To-dos kommen dann nur aus deinen Markdown-Notizen.")
+
+    # ---- 9: Apps ----
+    header(9, "Morgen-Routine: welche Apps sollen starten")
     for app in data.get("morning_routine", {}).get("apps", []):
         name = app.get("name")
         state = "an" if app.get("enabled", True) else "aus"
@@ -377,6 +498,8 @@ API-Keys werden verdeckt eingegeben.
         ("Anthropic (Chat & Vision)", cfg.has_anthropic()),
         ("ElevenLabs (Stimme)", cfg.has_elevenlabs()),
         ("Notizverzeichnis", cfg.vault is not None),
+        ("Kalender", bool(cfg.get("calendar.enabled") and (cfg.get("calendar.sources") or []))),
+        ("Notion", bool(cfg.get("notion.enabled") and cfg.get("notion.token"))),
     ]:
         (ok if value else warn)(f"{label}: {'bereit' if value else 'nicht konfiguriert'}")
 

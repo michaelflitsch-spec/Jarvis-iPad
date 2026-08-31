@@ -64,9 +64,20 @@ class School:
             "next_exam": self.next_exam(),
         }
 
-    def briefing_text(self, day: dt.date | None = None) -> str:
-        """Kurzer, sprechbarer Schul-Absatz fuer das Audio-Briefing."""
+    def briefing_text(self, day: dt.date | None = None,
+                      tasks: list[dict] | None = None) -> str:
+        """Kurzer, sprechbarer Schul-Absatz fuer das Audio-Briefing.
+
+        `tasks` erlaubt es, die bereits zusammengefuehrte Liste aus Notizen und
+        Notion zu uebergeben - sonst zaehlt das Briefing nur die Notizen.
+        """
         data = self.overview(day)
+        if tasks is not None:
+            data["homework"] = tasks
+            data["overdue"] = [t for t in tasks if t.get("overdue")]
+            data["urgent"] = [t for t in tasks
+                              if t.get("days_left") is not None and t["days_left"] <= 1
+                              and not t.get("overdue")]
 
         if not self.vault.available:
             return "Ihr Notizverzeichnis ist noch nicht verbunden. Schule kann ich daher nicht berichten."

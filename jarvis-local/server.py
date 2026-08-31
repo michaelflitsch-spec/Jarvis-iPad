@@ -20,9 +20,11 @@ from pydantic import BaseModel, Field
 from jarvis import config as config_module
 from jarvis import launcher
 from jarvis.brain import Brain, BrainError
+from jarvis.calendar import CalendarError
 from jarvis.briefing import Briefing
 from jarvis.goodnotes import GoodnotesExport
 from jarvis.notes import Vault
+from jarvis.notion import NotionError
 from jarvis.vision import Vision, VisionError
 from jarvis.voice import Voice, VoiceError
 
@@ -107,6 +109,8 @@ def status():
             "elevenlabs": voice.available,
             "vision": vision.available,
             "notes": vault.available,
+            "calendar": briefing.calendar.available,
+            "notion": briefing.notion.available,
         },
         "vault": vault.stats(),
     }
@@ -164,6 +168,43 @@ def timetable():
 def exams():
     horizon = cfg.get("dashboard.exam_horizon_days", 21)
     return {"exams": [e.to_dict() for e in vault.exams(horizon)]}
+
+
+@app.get("/api/calendar")
+def calendar_events(days: int = 14):
+    if not briefing.calendar.available:
+        return {"available": False, "events": [], "error": None,
+                "hint": "Keine iCal-Adresse hinterlegt -> python3 setup_wizard.py"}
+    try:
+        events = briefing.calendar.upcoming(days)
+    except CalendarError as exc:
+        raise HTTPException(502, str(exc)) from exc
+    return {"available": True, "events": events,
+            "today": [e for e in events if e["is_today"]],
+            "error": briefing.calendar.last_error}
+
+
+@app.get("/api/notion/tasks")
+def notion_tasks(limit: int = 50):
+    if not briefing.notion.available:
+        return {"available": False, "tasks": [],
+                "hint": "Notion nicht konfiguriert -> python3 setup_wizard.py"}
+    try:
+        return {"available": True, "tasks": briefing.notion.tasks(limit=limit),
+                "columns": briefing.notion.columns()}
+    except NotionError as exc:
+        raise HTTPException(502, str(exc)) from exc
+
+
+@app.get("/api/notion/check")
+def notion_check():
+    """Verbindung und erkannte Spalten pruefen."""
+    if not briefing.notion.available:
+        raise HTTPException(503, "Notion ist nicht konfiguriert.")
+    try:
+        return briefing.notion.check()
+    except NotionError as exc:
+        raise HTTPException(502, str(exc)) from exc
 
 
 @app.get("/api/training/week")
