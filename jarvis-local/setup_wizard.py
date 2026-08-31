@@ -486,8 +486,8 @@ API-Keys werden verdeckt eingegeben.
     port = ask("Port für das Dashboard", str(_get(data, "server.port", 8420)))
     _set(data, "server.port", int(port) if port.isdigit() else 8420)
 
-    # ---- 8: Speichern ----
-    header(8, "Speichern und prüfen")
+    # ---- 10: Speichern ----
+    header(10, "Speichern und prüfen")
     path = config_module.save(data)
     ok(f"Geschrieben: {path}")
     info("Dateirechte auf 600 gesetzt (nur du darfst lesen) – die Datei enthält Keys.")
@@ -512,6 +512,10 @@ API-Keys werden verdeckt eingegeben.
   1. Dashboard starten
      {C_CYAN}python3 server.py{C_OFF}
      dann im Browser:  http://{host}:{port}/
+
+  1b. Auf dem iPad testen (gleiches WLAN)
+     {C_CYAN}python3 server.py --lan{C_OFF}
+     Der Server zeigt dir die Adresse fuer Safari an.
 
   2. Klatsch-Schwelle für deinen Raum messen
      {C_CYAN}python3 ClapTrigger.py --calibrate{C_OFF}
